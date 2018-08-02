@@ -3,3 +3,4 @@
 target
 logs
 src/main/generated-sources
+hello.c
