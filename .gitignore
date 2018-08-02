@@ -1,0 +1,5 @@
+.classpath
+.project
+target
+logs
+src/main/generated-sources

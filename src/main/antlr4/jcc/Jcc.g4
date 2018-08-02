@@ -1,0 +1,3 @@
+grammar Jcc;
+
+program : 'jcc' ;
