@@ -1,31 +1,46 @@
 grammar Jcc;
 
-program
-	: funcDef*
+@header {
+import jcc.ast.*;
+// import java.util.*;
+// import java.util.stream.*;
+}
+
+@parser::members {
+}
+
+program returns [ProgramNode n]
+@init { List<FuncDefNode> funcDefs = new ArrayList<>(); }
+	: ( funcDef { funcDefs.add($funcDef.n); } )* { $n = new ProgramNode(funcDefs); }
 	;
 
-funcDef
+funcDef returns [FuncDefNode n]
 	: type IDT LPAREN funcParams? RPAREN block
+	  {
+	  	$n = new FuncDefNode(CType.of($type.text), $IDT.text, $funcParams.ctx == null ? new ArrayList<>() : $funcParams.e, $block.n);
+	  }
 	;
 
-block
-	: LBRACE stmt* RBRACE
+block returns [BlockNode n]
+@init { List<StmtNode> stmts = new ArrayList<>(); }
+	: LBRACE ( stmt { stmts.add($stmt.n); } )* RBRACE { $n = new BlockNode(stmts); }
 	;
 
-stmt
-	: varDefStmt
+stmt returns [StmtNode n]
+	: varDefStmt { $n = $varDefStmt.n; }
 	;
 
-varDefStmt
-	: type IDT SEMICOLON
+varDefStmt returns [VarDefNode n]
+	: type IDT SEMICOLON { $n = new VarDefNode(CType.of($type.text), $IDT.text); }
 	;
 
-funcParams
-	: paramDef ( ',' paramDef )*
+funcParams returns [List<FuncDefNode.ParamDef> e]
+@init { $e = new ArrayList<>(); }
+	: paramDef { $e.add($paramDef.e); } ( ',' paramDef { $e.add($paramDef.e); } )*
 	;
 
-paramDef
-	: type IDT
+paramDef returns [FuncDefNode.ParamDef e]
+	: type IDT { $e = new FuncDefNode.ParamDef(CType.of($type.text), $IDT.text); }
 	;
 
 type
