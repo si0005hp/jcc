@@ -28,10 +28,16 @@ block returns [BlockNode n]
 
 stmt returns [StmtNode n]
 	: varDefStmt { $n = $varDefStmt.n; }
+	| returnStmt { $n = $returnStmt.n; }
 	;
 
 varDefStmt returns [VarDefNode n]
 	: type IDT SEMICOLON { $n = new VarDefNode(CType.of($type.text), $IDT.text); }
+	;
+
+returnStmt returns [ReturnNode n]
+	: RETURN expr SEMICOLON { $n = new ReturnNode($expr.n); }
+	| RETURN SEMICOLON      { $n = new ReturnNode(null); }
 	;
 
 funcParams returns [List<FuncDefNode.ParamDef> e]
@@ -43,13 +49,27 @@ paramDef returns [FuncDefNode.ParamDef e]
 	: type IDT { $e = new FuncDefNode.ParamDef(CType.of($type.text), $IDT.text); }
 	;
 
+expr returns [ExprNode n]
+	: l=expr op=('*'|'/') r=expr  { $n = new BinOpNode($op.type, $l.n, $r.n); }
+	| l=expr op=('+'|'-') r=expr  { $n = new BinOpNode($op.type, $l.n, $r.n); }
+	| INTLIT                      { $n = new IntLiteralNode($INTLIT.int); }
+	| LPAREN expr RPAREN          { $n = $expr.n; }
+	;
+
 type
 	: INT
 	| VOID
 	;
 
+
 INT : 'int' ;
 VOID : 'void' ;
+RETURN : 'return' ;
+
+MUL : '*' ;
+DIV : '/' ;
+ADD : '+' ;
+SUB : '-' ;
 
 LBRACE : '{' ;	
 RBRACE : '}' ;
@@ -60,6 +80,7 @@ RBRACK : ']' ;
 SEMICOLON : ';' ;
 
 IDT : [a-z]+ ;
+INTLIT : [0-9]+ ;
 
 NEWLINE : ('\r' '\n'?|'\n') -> skip ;
 WS : [ \t]+ -> skip ;

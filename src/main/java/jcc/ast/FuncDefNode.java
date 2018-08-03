@@ -3,6 +3,7 @@ package jcc.ast;
 import java.util.List;
 
 import jcc.CType;
+import jcc.NodeVisitor;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -17,9 +18,14 @@ public class FuncDefNode extends StmtNode {
         private CType ptype;
         private String pname;
     }
-    
+
     private CType retvalType;
     private String fname;
     private List<ParamDef> params;
     private BlockNode block;
+
+    @Override
+    public <E, S> S accept(NodeVisitor<E, S> v) {
+        return v.visit(this);
+    }
 }

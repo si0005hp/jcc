@@ -13,17 +13,20 @@ import org.antlr.v4.runtime.CommonTokenStream;
 
 import jcc.JccParser.ProgramContext;
 
-public class Main {
-    private static final String MODE = "view";
+public class Jcc {
+    private static final String MODE = "r";
     
     public static void main(String[] args) throws IOException {
         try (InputStream is = args.length < 1 ?
                         System.in : new FileInputStream(args[0]);) {
-            
-            if (MODE.equals("view")) {
+
+            if (MODE.equals("v")) {
                 treeView(CharStreams.fromStream(is));
+            } else if (MODE.equals("d")) {
+                debugCode(CharStreams.fromStream(is));
             } else {
-                run(CharStreams.fromStream(is));
+                int result = run(CharStreams.fromStream(is));
+                System.out.println(result);
             }
         }
     }
@@ -32,7 +35,21 @@ public class Main {
         JccParser parser = getParser(input);
         parser.setErrorHandler(new BailErrorStrategy());
         ProgramContext p = parser.program();
-        return 0;
+        
+        CodeGenerator gen = new CodeGenerator();
+        gen.generate(p.n);
+        CodeExecutor exec = new CodeExecutor(gen);
+        return exec.execute();
+    }
+    
+    static void debugCode(CharStream input) {
+        JccParser parser = getParser(input);
+        parser.setErrorHandler(new BailErrorStrategy());
+        ProgramContext p = parser.program();
+        
+        CodeGenerator gen = new CodeGenerator();
+        gen.generate(p.n);
+        gen.debugCode();
     }
     
     private static JccParser getParser(CharStream input) {

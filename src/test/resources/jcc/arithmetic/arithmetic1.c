@@ -1,4 +1,4 @@
 int main(int argc)
 {
-	int i;
+	return 0;
 }
