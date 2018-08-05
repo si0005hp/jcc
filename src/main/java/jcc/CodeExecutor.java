@@ -14,7 +14,7 @@ public class CodeExecutor {
     
     public CodeExecutor(CodeGenerator gen) {
         this.codes = gen.getCodes();
-        this.mainAddr = gen.getFuncDefs().get("main").getFuncAddr();
+        this.mainAddr = gen.getFuncDefs().get("main").getFuncAddr().asInt();
     }
     
     public int execute() {
@@ -23,14 +23,15 @@ public class CodeExecutor {
         stack.add(-1L); // Return addres of main func
         
         long x, y = 0;
-        while (true) {
+        
+        while (pc > -1 && pc <= codes.size() - 1) {
             Code c = codes.get(pc);
             
             switch (c.getInst()) {
             case ENTRY:
                 break;
             case PUSH:
-                stack.add(c.getOperand());
+                stack.add(c.getOperand().getVal());
                 break;
             case ADD:
                 y = stack.removeLast(); x = stack.removeLast();
@@ -49,7 +50,7 @@ public class CodeExecutor {
                 stack.add(x / y);
                 break;
             case RET:
-                if (c.getOperand() == 0) {
+                if (c.getOperand().getVal() == 0) {
                     y = stack.removeLast();
                 }
                 int sp = stack.size() - 1;
@@ -58,27 +59,34 @@ public class CodeExecutor {
                 }
                 fp = stack.removeLast().intValue();
                 pc = stack.removeLast().intValue();
-                break;
+                continue;
             case FRAME:
                 stack.add(Long.valueOf(fp));
                 fp = stack.size() - 1;
-                for (int i = 0; i < c.getOperand(); i++) {
+                for (int i = 0; i < c.getOperand().getVal(); i++) {
                     stack.add(null); // Expand stack by the number of lvars
                 }
                 break;
             case STOREL:
                 y = stack.removeLast();
-                stack.set(fp + (int)c.getOperand(), y);
+                stack.set(fp + c.getOperand().asInt(), y);
                 break;
             case LOADL:
-                y = stack.get(fp + (int)c.getOperand());
+                y = stack.get(fp + c.getOperand().asInt());
+                stack.add(y);
+                break;
+            case CALL:
+                stack.add(Long.valueOf(pc + 1));
+                pc = c.getOperand().asInt();
+                continue;
+            case POPR:
+                for (int i = 0; i < c.getOperand().asInt(); i++) {
+                    stack.removeLast(); // Revert expanded stack
+                }
                 stack.add(y);
                 break;
             default:
                 throw new IllegalArgumentException(c.getInst().name());
-            }
-            if (pc == -1) {
-                break;
             }
             pc++;
         }

@@ -8,10 +8,13 @@ import static jcc.JccParser.SUB;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 
 import jcc.ast.BinOpNode;
 import jcc.ast.BlockNode;
+import jcc.ast.ExprNode;
+import jcc.ast.FuncCallNode;
 import jcc.ast.FuncDefNode;
 import jcc.ast.IntLiteralNode;
 import jcc.ast.ProgramNode;
@@ -31,13 +34,25 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     private final Map<String, FuncDefinition> funcDefs = new HashMap<>();
     
     public void generate(ProgramNode n) {
+        n.getFuncDefs().forEach(f -> funcDefs.put(f.getFname(), new FuncDefinition(f, MutableLong.of(0))));
         n.getFuncDefs().forEach(f -> f.accept(this));
     }
     
     void debugCode() {
         codes.stream()
-            .map(c -> String.format("%s\t%s", c.getInst().name(), c.getOperand()))
-            .forEach(System.out::println);;
+            .map(c -> String.format("%s\t%s", c.getInst().name(), c.getOperand().getVal()))
+            .forEach(System.out::println);
+    }
+    
+    @Override
+    public Void visit(FuncDefNode n) {
+        FuncDefinition fd = funcDefs.get(n.getFname());
+        fd.getFuncAddr().setVal(codes.size()); // Set idx of code as FuncAddr 
+        
+        codes.add(new Code(Instruction.ENTRY, fd.getFuncAddr()));
+        
+        n.getBlock().accept(this);
+        return null;
     }
     
     Map<String, LvarDefinition> env;
@@ -48,7 +63,7 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         long lvarCnt = n.getStmts().stream()
                 .filter(s -> s instanceof VarDefNode || s instanceof VarInitNode)
                 .count();
-        codes.add(new Code(Instruction.FRAME, lvarCnt));    
+        codes.add(new Code(Instruction.FRAME, MutableLong.of(lvarCnt)));    
         
         n.getStmts().forEach(s -> s.accept(this));
         
@@ -57,31 +72,19 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     }
 
     @Override
-    public Void visit(FuncDefNode n) {
-        Code e = new Code(Instruction.ENTRY);
-        codes.add(e);
-        
-        FuncDefinition fd = new FuncDefinition(n, codes.indexOf(e));
-        funcDefs.put(n.getFname(), fd);
-        
-        n.getBlock().accept(this);
-        return null;
-    }
-
-    @Override
     public Void visit(ReturnNode n) {
         if (n.getExpr() != null) {
             n.getExpr().accept(this);
-            codes.add(new Code(Instruction.RET, 0)); // With retval
+            codes.add(new Code(Instruction.RET, MutableLong.of(0))); // With retval
         } else {
-            codes.add(new Code(Instruction.RET, 1)); // No retval
+            codes.add(new Code(Instruction.RET, MutableLong.of(1))); // No retval
         }
         return null;
     }
 
     @Override
     public Void visit(IntLiteralNode n) {
-        codes.add(new Code(Instruction.PUSH, n.getVal()));
+        codes.add(new Code(Instruction.PUSH, MutableLong.of(n.getVal())));
         return null;
     }
 
@@ -117,7 +120,7 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     @Override
     public Void visit(VarRefNode n) {
         LvarDefinition lvar = env.get(n.getVname());
-        codes.add(new Code(Instruction.LOADL, lvar.getFIdx()));
+        codes.add(new Code(Instruction.LOADL, MutableLong.of(lvar.getFIdx())));
         return null;
     }
 
@@ -125,7 +128,7 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     public Void visit(VarLetNode n) {
         n.getExpr().accept(this);
         LvarDefinition lvar = env.get(n.getVar().getVname());
-        codes.add(new Code(Instruction.STOREL, lvar.getFIdx()));
+        codes.add(new Code(Instruction.STOREL, MutableLong.of(lvar.getFIdx())));
         return null;
     }
 
@@ -134,7 +137,24 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         LvarDefinition lvar = new LvarDefinition(n.getLvar(), env.size() + 1);
         env.put(lvar.getVname(), lvar);
         n.getExpr().accept(this);
-        codes.add(new Code(Instruction.STOREL, lvar.getFIdx()));
+        codes.add(new Code(Instruction.STOREL, MutableLong.of(lvar.getFIdx())));
+        return null;
+    }
+
+    @Override
+    public Void visit(FuncCallNode n) {
+        FuncDefinition fd = funcDefs.get(n.getFname());
+        if (fd.getParams().size() != n.getArgs().size()) {
+            throw new RuntimeException(String.format("Inconsistent arg counts '%s' for '%s'. "
+                    + "Expected: %s", n.getArgs().size(), n.getFname(), fd.getParams().size()));
+        }
+        // Push args
+        for (ListIterator<ExprNode> it = n.getArgs().listIterator(n.getArgs().size());
+                it.hasPrevious();) {
+            it.previous().accept(this);
+        }
+        codes.add(new Code(Instruction.CALL, fd.getFuncAddr()));
+        codes.add(new Code(Instruction.POPR, MutableLong.of(n.getArgs().size())));
         return null;
     }
     

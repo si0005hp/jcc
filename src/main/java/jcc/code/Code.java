@@ -1,5 +1,6 @@
 package jcc.code;
 
+import jcc.MutableLong;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -19,8 +20,10 @@ public class Code {
         FRAME,
         STOREL,
         LOADL,
+        CALL,
+        POPR,
     }
     
     private final Instruction inst;
-    private long operand;
+    private MutableLong operand;
 }

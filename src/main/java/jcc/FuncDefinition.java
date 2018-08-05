@@ -13,9 +13,9 @@ public class FuncDefinition {
     private CType retvalType;
     private String fname;
     private List<ParamDef> params;
-    private int funcAddr;
+    private MutableLong funcAddr;
     
-    public FuncDefinition(FuncDefNode n, int addr) {
+    public FuncDefinition(FuncDefNode n, MutableLong addr) {
         this.retvalType = n.getRetvalType();
         this.fname = n.getFname();
         this.params = n.getParams();

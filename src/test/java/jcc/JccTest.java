@@ -27,6 +27,12 @@ public class JccTest {
         assertThat(runF("var/var4.c"), is(80));
     }
     
+    @Test
+    public void func() {
+        assertThat(runF("func/func1.c"), is(9));
+        assertThat(runF("func/func2.c"), is(11));
+    }
+    
     private int runF(String s) {
         try (InputStream is = getClass().getResourceAsStream(s)) {
             return Jcc.run(CharStreams.fromStream(is));
