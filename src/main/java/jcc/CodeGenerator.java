@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 
+import jcc.Code.Instruction;
 import jcc.ast.BinOpNode;
 import jcc.ast.BlockNode;
 import jcc.ast.ExprNode;
@@ -23,8 +24,6 @@ import jcc.ast.VarDefNode;
 import jcc.ast.VarInitNode;
 import jcc.ast.VarLetNode;
 import jcc.ast.VarRefNode;
-import jcc.code.Code;
-import jcc.code.Code.Instruction;
 import lombok.Getter;
 
 @Getter
@@ -44,8 +43,11 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
             .forEach(System.out::println);
     }
     
+    FunctionScope fScope;
     @Override
     public Void visit(FuncDefNode n) {
+        fScope = new FunctionScope();
+        
         FuncDefinition fd = funcDefs.get(n.getFname());
         fd.getFuncAddr().setVal(codes.size()); // Set idx of code as FuncAddr 
         
@@ -54,11 +56,10 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         n.getBlock().accept(this);
         return null;
     }
-    
-    Map<String, LvarDefinition> env;
+
     @Override
     public Void visit(BlockNode n) {
-        env = new HashMap<>();
+        fScope.addScope();
         
         long lvarCnt = n.getStmts().stream()
                 .filter(s -> s instanceof VarDefNode || s instanceof VarInitNode)
@@ -67,7 +68,7 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         
         n.getStmts().forEach(s -> s.accept(this));
         
-        env = null;
+        fScope.removeScope();
         return null;
     }
 
@@ -113,29 +114,28 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
 
     @Override
     public Void visit(VarDefNode n) {
-        env.put(n.getVname(), new LvarDefinition(n, env.size() + 1));
+        fScope.addVar(n.getType(), n.getVname());
         return null;
     }
     
     @Override
     public Void visit(VarRefNode n) {
-        LvarDefinition lvar = env.get(n.getVname());
-        codes.add(new Code(Instruction.LOADL, MutableLong.of(lvar.getFIdx())));
+        codes.add(new Code(Instruction.LOADL, 
+                MutableLong.of(fScope.getVar(n.getVname()).getFIdx())));
         return null;
     }
 
     @Override
     public Void visit(VarLetNode n) {
         n.getExpr().accept(this);
-        LvarDefinition lvar = env.get(n.getVar().getVname());
-        codes.add(new Code(Instruction.STOREL, MutableLong.of(lvar.getFIdx())));
+        codes.add(new Code(Instruction.STOREL, 
+                MutableLong.of(fScope.getVar(n.getVar().getVname()).getFIdx())));
         return null;
     }
 
     @Override
     public Void visit(VarInitNode n) {
-        LvarDefinition lvar = new LvarDefinition(n.getLvar(), env.size() + 1);
-        env.put(lvar.getVname(), lvar);
+        LvarDefinition lvar = fScope.addVar(n.getLvar().getType(), n.getLvar().getVname());
         n.getExpr().accept(this);
         codes.add(new Code(Instruction.STOREL, MutableLong.of(lvar.getFIdx())));
         return null;

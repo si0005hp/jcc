@@ -1,6 +1,5 @@
-package jcc.code;
+package jcc;
 
-import jcc.MutableLong;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;

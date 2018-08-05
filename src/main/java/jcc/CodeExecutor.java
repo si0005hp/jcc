@@ -3,8 +3,6 @@ package jcc;
 import java.util.LinkedList;
 import java.util.List;
 
-import jcc.code.Code;
-
 public class CodeExecutor {
     
     private final LinkedList<Long> stack = new LinkedList<>();
