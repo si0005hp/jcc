@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import jcc.ast.BinOpNode;
 import jcc.ast.BlockNode;
@@ -12,6 +13,9 @@ import jcc.ast.IntLiteralNode;
 import jcc.ast.ProgramNode;
 import jcc.ast.ReturnNode;
 import jcc.ast.VarDefNode;
+import jcc.ast.VarInitNode;
+import jcc.ast.VarLetNode;
+import jcc.ast.VarRefNode;
 import jcc.code.Code;
 import jcc.code.Code.Instruction;
 import lombok.Getter;
@@ -36,9 +40,19 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
             .forEach(System.out::println);;
     }
     
+    Map<String, LvarDefinition> env;
     @Override
     public Void visit(BlockNode n) {
+        env = new HashMap<>();
+        
+        long lvarCnt = n.getStmts().stream()
+                .filter(s -> s instanceof VarDefNode || s instanceof VarInitNode)
+                .count();
+        codes.add(new Code(Instruction.FRAME, lvarCnt));    
+        
         n.getStmts().forEach(s -> s.accept(this));
+        
+        env = null;
         return null;
     }
 
@@ -51,11 +65,6 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         funcDefs.put(n.getFname(), fd);
         
         n.getBlock().accept(this);
-        return null;
-    }
-
-    @Override
-    public Void visit(VarDefNode n) {
         return null;
     }
 
@@ -96,6 +105,36 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         default:
             throw new IllegalArgumentException(String.valueOf(n.getOpType()));
         }
+        return null;
+    }
+
+    @Override
+    public Void visit(VarDefNode n) {
+        env.put(n.getVname(), new LvarDefinition(n, env.size() + 1));
+        return null;
+    }
+    
+    @Override
+    public Void visit(VarRefNode n) {
+        LvarDefinition lvar = env.get(n.getVname());
+        codes.add(new Code(Instruction.LOADL, lvar.getFIdx()));
+        return null;
+    }
+
+    @Override
+    public Void visit(VarLetNode n) {
+        n.getExpr().accept(this);
+        LvarDefinition lvar = env.get(n.getVar().getVname());
+        codes.add(new Code(Instruction.STOREL, lvar.getFIdx()));
+        return null;
+    }
+
+    @Override
+    public Void visit(VarInitNode n) {
+        LvarDefinition lvar = new LvarDefinition(n.getLvar(), env.size() + 1);
+        env.put(lvar.getVname(), lvar);
+        n.getExpr().accept(this);
+        codes.add(new Code(Instruction.STOREL, lvar.getFIdx()));
         return null;
     }
     

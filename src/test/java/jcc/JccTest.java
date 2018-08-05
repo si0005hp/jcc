@@ -19,6 +19,14 @@ public class JccTest {
         assertThat(runF("arithmetic/arithmetic3.c"), is(16));
     }
     
+    @Test
+    public void var() {
+        assertThat(runF("var/var1.c"), is(9));
+        assertThat(runF("var/var2.c"), is(21));
+        assertThat(runF("var/var3.c"), is(30));
+        assertThat(runF("var/var4.c"), is(80));
+    }
+    
     private int runF(String s) {
         try (InputStream is = getClass().getResourceAsStream(s)) {
             return Jcc.run(CharStreams.fromStream(is));

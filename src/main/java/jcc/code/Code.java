@@ -16,6 +16,9 @@ public class Code {
         SUB,
         MUL,
         DIV,
+        FRAME,
+        STOREL,
+        LOADL,
     }
     
     private final Instruction inst;

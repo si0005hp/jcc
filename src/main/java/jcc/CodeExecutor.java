@@ -18,41 +18,61 @@ public class CodeExecutor {
     }
     
     public int execute() {
-        
+        int fp = 0;
         int pc = mainAddr;
-        stack.push(-1L); // Return addres of main func
+        stack.add(-1L); // Return addres of main func
         
         long x, y = 0;
         while (true) {
             Code c = codes.get(pc);
             
             switch (c.getInst()) {
+            case ENTRY:
+                break;
             case PUSH:
-                stack.push(c.getOperand());
+                stack.add(c.getOperand());
                 break;
             case ADD:
-                y = stack.pop(); x = stack.pop();
-                stack.push(x + y);
+                y = stack.removeLast(); x = stack.removeLast();
+                stack.add(x + y);
                 break;
             case SUB:
-                y = stack.pop(); x = stack.pop();
-                stack.push(x - y);
+                y = stack.removeLast(); x = stack.removeLast();
+                stack.add(x - y);
                 break;
             case MUL:
-                y = stack.pop(); x = stack.pop();
-                stack.push(x * y);
+                y = stack.removeLast(); x = stack.removeLast();
+                stack.add(x * y);
                 break;
             case DIV:
-                y = stack.pop(); x = stack.pop();
-                stack.push(x / y);
+                y = stack.removeLast(); x = stack.removeLast();
+                stack.add(x / y);
                 break;
             case RET:
                 if (c.getOperand() == 0) {
-                    y = stack.pop();
+                    y = stack.removeLast();
                 }
-                pc = stack.pop().intValue();
+                int sp = stack.size() - 1;
+                for (int i = 0; i < sp - fp; i++) {
+                    stack.removeLast(); // Revert expanded stack
+                }
+                fp = stack.removeLast().intValue();
+                pc = stack.removeLast().intValue();
                 break;
-            case ENTRY:
+            case FRAME:
+                stack.add(Long.valueOf(fp));
+                fp = stack.size() - 1;
+                for (int i = 0; i < c.getOperand(); i++) {
+                    stack.add(null); // Expand stack by the number of lvars
+                }
+                break;
+            case STOREL:
+                y = stack.removeLast();
+                stack.set(fp + (int)c.getOperand(), y);
+                break;
+            case LOADL:
+                y = stack.get(fp + (int)c.getOperand());
+                stack.add(y);
                 break;
             default:
                 throw new IllegalArgumentException(c.getInst().name());

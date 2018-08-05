@@ -27,12 +27,22 @@ block returns [BlockNode n]
 	;
 
 stmt returns [StmtNode n]
-	: varDefStmt { $n = $varDefStmt.n; }
-	| returnStmt { $n = $returnStmt.n; }
+	: varDefStmt   { $n = $varDefStmt.n; }
+	| varInitStmt  { $n = $varInitStmt.n; }
+	| varLetStmt   { $n = $varLetStmt.n; }
+	| returnStmt   { $n = $returnStmt.n; }
 	;
 
 varDefStmt returns [VarDefNode n]
 	: type IDT SEMICOLON { $n = new VarDefNode(CType.of($type.text), $IDT.text); }
+	;
+
+varInitStmt returns [VarInitNode n]
+	: type IDT EQ expr SEMICOLON { $n = new VarInitNode(new VarDefNode(CType.of($type.text), $IDT.text), $expr.n); }
+	;
+
+varLetStmt returns [VarLetNode n]
+	: var EQ expr SEMICOLON  { $n = new VarLetNode($var.n, $expr.n); }
 	;
 
 returnStmt returns [ReturnNode n]
@@ -53,7 +63,12 @@ expr returns [ExprNode n]
 	: l=expr op=('*'|'/') r=expr  { $n = new BinOpNode($op.type, $l.n, $r.n); }
 	| l=expr op=('+'|'-') r=expr  { $n = new BinOpNode($op.type, $l.n, $r.n); }
 	| INTLIT                      { $n = new IntLiteralNode($INTLIT.int); }
+	| var                         { $n = $var.n; }
 	| LPAREN expr RPAREN          { $n = $expr.n; }
+	;
+
+var returns [VarRefNode n]
+	: IDT { $n = new VarRefNode($IDT.text); }
 	;
 
 type
@@ -78,6 +93,7 @@ RPAREN : ')' ;
 LBRACK : '[' ;
 RBRACK : ']' ;
 SEMICOLON : ';' ;
+EQ : '=' ;
 
 IDT : [a-z]+ ;
 INTLIT : [0-9]+ ;
