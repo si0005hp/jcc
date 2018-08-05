@@ -34,11 +34,11 @@ stmt returns [StmtNode n]
 	;
 
 varDefStmt returns [VarDefNode n]
-	: type IDT SEMICOLON { $n = new VarDefNode(CType.of($type.text), $IDT.text); }
+	: type IDT SEMICOLON  { $n = new VarDefNode(CType.of($type.text), $IDT.text); }
 	;
 
 varInitStmt returns [VarInitNode n]
-	: type IDT EQ expr SEMICOLON { $n = new VarInitNode(new VarDefNode(CType.of($type.text), $IDT.text), $expr.n); }
+	: type IDT EQ expr SEMICOLON  { $n = new VarInitNode(new VarDefNode(CType.of($type.text), $IDT.text), $expr.n); }
 	;
 
 varLetStmt returns [VarLetNode n]
@@ -46,17 +46,17 @@ varLetStmt returns [VarLetNode n]
 	;
 
 returnStmt returns [ReturnNode n]
-	: RETURN expr SEMICOLON { $n = new ReturnNode($expr.n); }
-	| RETURN SEMICOLON      { $n = new ReturnNode(null); }
+	: RETURN expr SEMICOLON  { $n = new ReturnNode($expr.n); }
+	| RETURN SEMICOLON       { $n = new ReturnNode(null); }
 	;
 
 funcParams returns [List<FuncDefNode.ParamDef> e]
 @init { $e = new ArrayList<>(); }
-	: paramDef { $e.add($paramDef.e); } ( ',' paramDef { $e.add($paramDef.e); } )*
+	: paramDef  { $e.add($paramDef.e); } ( ',' paramDef { $e.add($paramDef.e); } )*
 	;
 
 paramDef returns [FuncDefNode.ParamDef e]
-	: type IDT { $e = new FuncDefNode.ParamDef(CType.of($type.text), $IDT.text); }
+	: type IDT  { $e = new FuncDefNode.ParamDef(CType.of($type.text), $IDT.text); }
 	;
 
 expr returns [ExprNode n]
@@ -68,7 +68,7 @@ expr returns [ExprNode n]
 	;
 
 var returns [VarRefNode n]
-	: IDT { $n = new VarRefNode($IDT.text); }
+	: IDT  { $n = new VarRefNode($IDT.text); }
 	;
 
 type

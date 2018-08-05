@@ -1,10 +1,14 @@
 package jcc;
 
+import static jcc.JccParser.ADD;
+import static jcc.JccParser.DIV;
+import static jcc.JccParser.MUL;
+import static jcc.JccParser.SUB;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import jcc.ast.BinOpNode;
 import jcc.ast.BlockNode;
@@ -19,10 +23,6 @@ import jcc.ast.VarRefNode;
 import jcc.code.Code;
 import jcc.code.Code.Instruction;
 import lombok.Getter;
-import static jcc.JccParser.ADD;
-import static jcc.JccParser.SUB;
-import static jcc.JccParser.MUL;
-import static jcc.JccParser.DIV;
 
 @Getter
 public class CodeGenerator implements NodeVisitor<Void, Void> {
