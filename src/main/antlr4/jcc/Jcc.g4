@@ -21,17 +21,14 @@ funcDef returns [FuncDefNode n]
 	  }
 	;
 
-block returns [BlockNode n]
-@init { List<StmtNode> stmts = new ArrayList<>(); }
-	: LBRACE ( stmt { stmts.add($stmt.n); } )* RBRACE { $n = new BlockNode(stmts); }
-	;
-
 stmt returns [StmtNode n]
 	: varDefStmt   { $n = $varDefStmt.n; }
 	| varInitStmt  { $n = $varInitStmt.n; }
 	| varLetStmt   { $n = $varLetStmt.n; }
 	| returnStmt   { $n = $returnStmt.n; }
 	| exprStmt     { $n = $exprStmt.n; }
+	| ifStmt       { $n = $ifStmt.n; }
+	| block        { $n = $block.n; }
 	;
 
 varDefStmt returns [VarDefNode n]
@@ -53,6 +50,18 @@ returnStmt returns [ReturnNode n]
 
 exprStmt returns [ExprStmtNode n]
 	: expr SEMICOLON  { $n = new ExprStmtNode($expr.n); }
+	;
+
+ifStmt returns [IfNode n]
+	: IF LPAREN cond=expr RPAREN thenBody=stmt ( ELSE elseBody=stmt )?
+	  {
+	  	$n = new IfNode($cond.n, $thenBody.n, $elseBody.ctx == null ? null : $elseBody.n);
+	  }
+	;
+
+block returns [BlockNode n]
+@init { List<StmtNode> stmts = new ArrayList<>(); }
+	: LBRACE ( stmt { stmts.add($stmt.n); } )* RBRACE { $n = new BlockNode(stmts); }
 	;
 
 funcParams returns [List<FuncDefNode.ParamDef> e]
@@ -91,6 +100,8 @@ type
 INT : 'int' ;
 VOID : 'void' ;
 RETURN : 'return' ;
+IF : 'if' ;
+ELSE : 'else' ;
 
 MUL : '*' ;
 DIV : '/' ;

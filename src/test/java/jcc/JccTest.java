@@ -40,6 +40,12 @@ public class JccTest {
     }
     
     @Test
+    public void ifstmt() {
+        assertThat(runF("ifstmt/if1.c"), is(15));
+        assertThat(runF("ifstmt/if2.c"), is(25));
+    }
+    
+    @Test
     public void others() {
         assertThat(runF("others/expr_stmt.c"), is(9));
     }

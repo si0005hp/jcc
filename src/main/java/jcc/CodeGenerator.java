@@ -18,6 +18,7 @@ import jcc.ast.ExprNode;
 import jcc.ast.ExprStmtNode;
 import jcc.ast.FuncCallNode;
 import jcc.ast.FuncDefNode;
+import jcc.ast.IfNode;
 import jcc.ast.IntLiteralNode;
 import jcc.ast.ProgramNode;
 import jcc.ast.ReturnNode;
@@ -175,5 +176,10 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         n.getExpr().accept(this);
         return null;
     }
-    
+
+    @Override
+    public Void visit(IfNode n) {
+        return null;
+    }
+
 }

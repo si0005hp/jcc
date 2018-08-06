@@ -5,6 +5,7 @@ import jcc.ast.BlockNode;
 import jcc.ast.ExprStmtNode;
 import jcc.ast.FuncCallNode;
 import jcc.ast.FuncDefNode;
+import jcc.ast.IfNode;
 import jcc.ast.IntLiteralNode;
 import jcc.ast.ReturnNode;
 import jcc.ast.VarDefNode;
@@ -26,4 +27,5 @@ public interface NodeVisitor<E, S> {
     S visit(VarLetNode n);
     S visit(VarInitNode n);
     S visit(ExprStmtNode n);
+    S visit(IfNode n);
 }
