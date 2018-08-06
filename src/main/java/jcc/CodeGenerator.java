@@ -39,19 +39,22 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     
     void debugCode() {
         codes.stream()
-            .map(c -> String.format("%s\t%s", c.getInst().name(), c.getOperand().getVal()))
+            .map(c -> String.format("%s\t%s", c.getInst().name(),
+                    c.getOperand() == null ? "" : c.getOperand().getVal()))
             .forEach(System.out::println);
     }
     
     FunctionScope fScope;
     @Override
     public Void visit(FuncDefNode n) {
-        fScope = new FunctionScope();
+        fScope = new FunctionScope(); // Initialize func scope
         
         FuncDefinition fd = funcDefs.get(n.getFname());
-        fd.getFuncAddr().setVal(codes.size()); // Set idx of code as FuncAddr 
-        
+        fd.getFuncAddr().setVal(codes.size()); // Set idx of code as FuncAddr
         codes.add(new Code(Instruction.ENTRY, fd.getFuncAddr()));
+        
+        // Register arguments to func scope scope
+        fd.getParams().forEach(p -> fScope.addVar(p.getType(), p.getPname(), true));
         
         n.getBlock().accept(this);
         return null;
@@ -113,31 +116,39 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     }
 
     @Override
-    public Void visit(VarDefNode n) {
-        fScope.addVar(n.getType(), n.getVname());
-        return null;
-    }
-    
-    @Override
     public Void visit(VarRefNode n) {
-        codes.add(new Code(Instruction.LOADL, 
-                MutableLong.of(fScope.getVar(n.getVname()).getFIdx())));
+        LvarDefinition var = fScope.getVar(n.getVname());
+        if (var.isArg()) {
+            codes.add(new Code(Instruction.LOADA, MutableLong.of(var.getIdx())));
+        } else {
+            codes.add(new Code(Instruction.LOADL, MutableLong.of(var.getIdx())));
+        }
         return null;
     }
 
     @Override
     public Void visit(VarLetNode n) {
         n.getExpr().accept(this);
-        codes.add(new Code(Instruction.STOREL, 
-                MutableLong.of(fScope.getVar(n.getVar().getVname()).getFIdx())));
+        LvarDefinition var = fScope.getVar(n.getVar().getVname());
+        if (var.isArg()) {
+            codes.add(new Code(Instruction.STOREA, MutableLong.of(var.getIdx())));
+        } else {
+            codes.add(new Code(Instruction.STOREL, MutableLong.of(var.getIdx())));
+        }
         return null;
     }
 
     @Override
+    public Void visit(VarDefNode n) {
+        fScope.addVar(n.getType(), n.getVname(), false);
+        return null;
+    }
+    
+    @Override
     public Void visit(VarInitNode n) {
-        LvarDefinition lvar = fScope.addVar(n.getLvar().getType(), n.getLvar().getVname());
+        LvarDefinition var = fScope.addVar(n.getLvar().getType(), n.getLvar().getVname(), false);
         n.getExpr().accept(this);
-        codes.add(new Code(Instruction.STOREL, MutableLong.of(lvar.getFIdx())));
+        codes.add(new Code(Instruction.STOREL, MutableLong.of(var.getIdx())));
         return null;
     }
 

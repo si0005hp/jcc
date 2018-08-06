@@ -15,7 +15,7 @@ import lombok.Value;
 public class FuncDefNode extends StmtNode {
     @Value
     public static class ParamDef {
-        private CType ptype;
+        private CType type;
         private String pname;
     }
 

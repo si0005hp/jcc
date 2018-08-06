@@ -21,6 +21,8 @@ public class Code {
         LOADL,
         CALL,
         POPR,
+        STOREA,
+        LOADA,
     }
     
     private final Instruction inst;

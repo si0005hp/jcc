@@ -83,6 +83,14 @@ public class CodeExecutor {
                 }
                 stack.add(y);
                 break;
+            case STOREA:
+                y = stack.removeLast();
+                stack.set(fp - (c.getOperand().asInt() + 1), y);
+                break;
+            case LOADA:
+                y = stack.get(fp - (c.getOperand().asInt() + 1));
+                stack.add(y);
+                break;
             default:
                 throw new IllegalArgumentException(c.getInst().name());
             }

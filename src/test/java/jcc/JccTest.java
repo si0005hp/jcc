@@ -31,6 +31,9 @@ public class JccTest {
     public void func() {
         assertThat(runF("func/func1.c"), is(9));
         assertThat(runF("func/func2.c"), is(11));
+        assertThat(runF("func/func3.c"), is(9));
+        assertThat(runF("func/func4.c"), is(8));
+        assertThat(runF("func/func5.c"), is(20));
     }
     
     private int runF(String s) {

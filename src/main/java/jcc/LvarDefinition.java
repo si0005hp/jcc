@@ -9,11 +9,12 @@ import lombok.Data;
 public class LvarDefinition {
     private CType type;
     private String vname;
-    private int fIdx;
+    private boolean isArg; // True if it's function arg
+    private int idx; // Idx of fp or sp
     
-    public LvarDefinition(VarDefNode n, int fIdx) {
+    public LvarDefinition(VarDefNode n, int idx) {
         this.type = n.getType();
         this.vname = n.getVname();
-        this.fIdx = fIdx;
+        this.idx = idx;
     }
 }

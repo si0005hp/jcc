@@ -14,7 +14,7 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import jcc.JccParser.ProgramContext;
 
 public class Jcc {
-    private static final String MODE = "v";
+    private static final String MODE = "a";
     
     public static void main(String[] args) throws IOException {
         try (InputStream is = args.length < 1 ?
