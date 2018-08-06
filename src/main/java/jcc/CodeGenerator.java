@@ -15,6 +15,7 @@ import jcc.Code.Instruction;
 import jcc.ast.BinOpNode;
 import jcc.ast.BlockNode;
 import jcc.ast.ExprNode;
+import jcc.ast.ExprStmtNode;
 import jcc.ast.FuncCallNode;
 import jcc.ast.FuncDefNode;
 import jcc.ast.IntLiteralNode;
@@ -166,6 +167,12 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         }
         codes.add(new Code(Instruction.CALL, fd.getFuncAddr()));
         codes.add(new Code(Instruction.POPR, MutableLong.of(n.getArgs().size())));
+        return null;
+    }
+
+    @Override
+    public Void visit(ExprStmtNode n) {
+        n.getExpr().accept(this);
         return null;
     }
     

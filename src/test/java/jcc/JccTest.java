@@ -26,6 +26,7 @@ public class JccTest {
         assertThat(runF("var/var3.c"), is(30));
         assertThat(runF("var/var4.c"), is(80));
         expectedToFail(() -> runF("var/var5.c"));
+        assertThat(runF("var/var6.c"), is(0));
     }
     
     @Test
@@ -36,6 +37,11 @@ public class JccTest {
         assertThat(runF("func/func4.c"), is(8));
         assertThat(runF("func/func5.c"), is(20));
         expectedToFail(() -> runF("func/func6.c"));
+    }
+    
+    @Test
+    public void others() {
+        assertThat(runF("others/expr_stmt.c"), is(9));
     }
     
     private int runF(String s) {

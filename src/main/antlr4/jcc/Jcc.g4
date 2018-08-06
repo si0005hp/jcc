@@ -31,6 +31,7 @@ stmt returns [StmtNode n]
 	| varInitStmt  { $n = $varInitStmt.n; }
 	| varLetStmt   { $n = $varLetStmt.n; }
 	| returnStmt   { $n = $returnStmt.n; }
+	| exprStmt     { $n = $exprStmt.n; }
 	;
 
 varDefStmt returns [VarDefNode n]
@@ -48,6 +49,10 @@ varLetStmt returns [VarLetNode n]
 returnStmt returns [ReturnNode n]
 	: RETURN expr SEMICOLON  { $n = new ReturnNode($expr.n); }
 	| RETURN SEMICOLON       { $n = new ReturnNode(null); }
+	;
+
+exprStmt returns [ExprStmtNode n]
+	: expr SEMICOLON  { $n = new ExprStmtNode($expr.n); }
 	;
 
 funcParams returns [List<FuncDefNode.ParamDef> e]

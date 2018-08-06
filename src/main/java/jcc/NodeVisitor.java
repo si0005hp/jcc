@@ -2,6 +2,7 @@ package jcc;
 
 import jcc.ast.BinOpNode;
 import jcc.ast.BlockNode;
+import jcc.ast.ExprStmtNode;
 import jcc.ast.FuncCallNode;
 import jcc.ast.FuncDefNode;
 import jcc.ast.IntLiteralNode;
@@ -24,4 +25,5 @@ public interface NodeVisitor<E, S> {
     S visit(ReturnNode n);
     S visit(VarLetNode n);
     S visit(VarInitNode n);
+    S visit(ExprStmtNode n);
 }

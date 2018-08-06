@@ -2,6 +2,7 @@ package jcc;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 public class CodeExecutor {
     
@@ -70,7 +71,8 @@ public class CodeExecutor {
                 stack.set(fp + c.getOperand().asInt(), y);
                 break;
             case LOADL:
-                y = stack.get(fp + c.getOperand().asInt());
+                y = Optional.ofNullable(stack.get(fp + c.getOperand().asInt()))
+                    .orElse(0L); // The case that the variable is not initialized
                 stack.add(y);
                 break;
             case CALL:
