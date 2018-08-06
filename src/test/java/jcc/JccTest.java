@@ -25,6 +25,7 @@ public class JccTest {
         assertThat(runF("var/var2.c"), is(21));
         assertThat(runF("var/var3.c"), is(30));
         assertThat(runF("var/var4.c"), is(80));
+        expectedToFail(() -> runF("var/var5.c"));
     }
     
     @Test
@@ -34,6 +35,7 @@ public class JccTest {
         assertThat(runF("func/func3.c"), is(9));
         assertThat(runF("func/func4.c"), is(8));
         assertThat(runF("func/func5.c"), is(20));
+        expectedToFail(() -> runF("func/func6.c"));
     }
     
     private int runF(String s) {
@@ -42,5 +44,15 @@ public class JccTest {
         } catch (IOException e) {
             throw new RuntimeException("Failed to load file: " + s);
         }
+    }
+    
+    private void expectedToFail(Runnable r) {
+        try {
+            r.run();
+        } catch (Exception e) {
+            System.out.println("Expected error: " + e.getMessage());
+            return;
+        }
+        throw new RuntimeException("Expected to be failed but ended normaly.");
     }
 }
