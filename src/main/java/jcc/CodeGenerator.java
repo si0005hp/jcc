@@ -55,21 +55,22 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         fd.getFuncAddr().setVal(codes.size()); // Set idx of code as FuncAddr
         codes.add(new Code(Instruction.ENTRY, fd.getFuncAddr()));
         
-        // Register arguments to func scope scope
-        fd.getParams().forEach(p -> fScope.addVar(p.getType(), p.getPname(), true));
+        MutableLong lvarCnt = MutableLong.of(0);
+        codes.add(new Code(Instruction.FRAME, lvarCnt));
         
+        // Process func args (Register args to func scope)
+        fd.getParams().forEach(p -> fScope.addArg(p.getType(), p.getPname()));
+        
+        // Process func body 
         n.getBlock().accept(this);
+        
+        lvarCnt.setVal(fScope.getLvarIdx()); // Set total count of lvar finally
         return null;
     }
 
     @Override
     public Void visit(BlockNode n) {
         fScope.addScope();
-        
-        long lvarCnt = n.getStmts().stream()
-                .filter(s -> s instanceof VarDefNode || s instanceof VarInitNode)
-                .count();
-        codes.add(new Code(Instruction.FRAME, MutableLong.of(lvarCnt)));    
         
         n.getStmts().forEach(s -> s.accept(this));
         
@@ -142,13 +143,13 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
 
     @Override
     public Void visit(VarDefNode n) {
-        fScope.addVar(n.getType(), n.getVname(), false);
+        fScope.addLvar(n.getType(), n.getVname());
         return null;
     }
     
     @Override
     public Void visit(VarInitNode n) {
-        LvarDefinition var = fScope.addVar(n.getLvar().getType(), n.getLvar().getVname(), false);
+        LvarDefinition var = fScope.addLvar(n.getLvar().getType(), n.getLvar().getVname());
         n.getExpr().accept(this);
         codes.add(new Code(Instruction.STOREL, MutableLong.of(var.getIdx())));
         return null;

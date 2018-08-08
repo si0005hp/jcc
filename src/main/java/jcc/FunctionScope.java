@@ -6,8 +6,14 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Optional;
 
+import lombok.Getter;
+
+@Getter
 public class FunctionScope {
     private final LinkedList<Map<String, LvarDefinition>> scopeStack = new LinkedList<>();
+    
+    private int argIdx = 0;
+    private int lvarIdx = 0;
     
     public FunctionScope() {
         scopeStack.add(new HashMap<>()); // This initial map is the layer of func args
@@ -27,13 +33,19 @@ public class FunctionScope {
         scopeStack.removeLast();
     }
     
-    public LvarDefinition addVar(CType type, String vname, boolean isArg) {
-        if (findVar(vname).isPresent()) {
-            throw new RuntimeException("Duplicated variable declaration: " + vname);
+    public LvarDefinition addArg(CType type, String vname) {
+        return addVar(new LvarDefinition(type, vname, true, ++argIdx));
+    }
+    
+    public LvarDefinition addLvar(CType type, String vname) {
+        return addVar(new LvarDefinition(type, vname, false, ++lvarIdx));
+    }
+    
+    private LvarDefinition addVar(LvarDefinition ld) {
+        if (findVar(ld.getVname()).isPresent()) {
+            throw new RuntimeException("Duplicated variable declaration: " + ld.getVname());
         }
-        Map<String, LvarDefinition> scope = scopeStack.getLast();
-        LvarDefinition ld = new LvarDefinition(type, vname, isArg, scope.size() + 1);
-        scope.put(vname, ld);
+        scopeStack.getLast().put(ld.getVname(), ld);
         return ld;
     }
     
