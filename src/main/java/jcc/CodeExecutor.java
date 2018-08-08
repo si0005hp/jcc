@@ -4,6 +4,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
+import org.stringtemplate.v4.compiler.CodeGenerator.conditional_return;
+
 public class CodeExecutor {
     
     private final LinkedList<Long> stack = new LinkedList<>();
@@ -92,6 +94,18 @@ public class CodeExecutor {
             case LOADA:
                 y = stack.get(fp - (c.getOperand().asInt() + 1));
                 stack.add(y);
+                break;
+            case JZ:
+                x = stack.removeLast().intValue();
+                if (x == 0) {
+                    pc = c.getOperand().asInt();
+                    continue;
+                }
+                break;
+            case JMP:
+                pc = c.getOperand().asInt();
+                continue;
+            case LABEL:
                 break;
             default:
                 throw new IllegalArgumentException(c.getInst().name());

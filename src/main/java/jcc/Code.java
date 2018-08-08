@@ -23,6 +23,10 @@ public class Code {
         POPR,
         STOREA,
         LOADA,
+        JZ,
+        JMP,
+        LABEL,
+        
     }
     
     private final Instruction inst;

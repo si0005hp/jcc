@@ -180,6 +180,24 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
 
     @Override
     public Void visit(IfNode n) {
+        MutableLong elseAddr = MutableLong.of(0);
+        MutableLong fiAddr = MutableLong.of(0);
+        
+        n.getCond().accept(this);
+        codes.add(new Code(Instruction.JZ, elseAddr));
+        n.getThenBody().accept(this);
+        
+        if (n.getElseBody() == null) {
+            codes.add(new Code(Instruction.LABEL, elseAddr));
+            elseAddr.setVal(codes.size() - 1);
+        } else {
+            codes.add(new Code(Instruction.JMP, fiAddr));
+            codes.add(new Code(Instruction.LABEL, elseAddr));
+            elseAddr.setVal(codes.size() - 1);
+            n.getElseBody().accept(this);
+            codes.add(new Code(Instruction.LABEL, fiAddr));
+            fiAddr.setVal(codes.size() - 1);
+        }
         return null;
     }
 

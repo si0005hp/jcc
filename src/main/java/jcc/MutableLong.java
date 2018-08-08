@@ -11,4 +11,12 @@ public class MutableLong {
     public int asInt() {
         return (int)val;
     }
+    
+    public void inc() {
+        this.val++;
+    }
+    
+    public void dec() {
+        this.val--;
+    }
 }
