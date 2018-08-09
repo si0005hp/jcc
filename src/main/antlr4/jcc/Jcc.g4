@@ -22,13 +22,16 @@ funcDef returns [FuncDefNode n]
 	;
 
 stmt returns [StmtNode n]
-	: varDefStmt   { $n = $varDefStmt.n; }
-	| varInitStmt  { $n = $varInitStmt.n; }
-	| varLetStmt   { $n = $varLetStmt.n; }
-	| returnStmt   { $n = $returnStmt.n; }
-	| exprStmt     { $n = $exprStmt.n; }
-	| ifStmt       { $n = $ifStmt.n; }
-	| block        { $n = $block.n; }
+	: varDefStmt    { $n = $varDefStmt.n; }
+	| varInitStmt   { $n = $varInitStmt.n; }
+	| varLetStmt    { $n = $varLetStmt.n; }
+	| returnStmt    { $n = $returnStmt.n; }
+	| exprStmt      { $n = $exprStmt.n; }
+	| ifStmt        { $n = $ifStmt.n; }
+	| whileStmt     { $n = $whileStmt.n; }
+	| breakStmt     { $n = $breakStmt.n; }
+	| continueStmt  { $n = $continueStmt.n; }
+	| block         { $n = $block.n; }
 	;
 
 varDefStmt returns [VarDefNode n]
@@ -59,6 +62,18 @@ ifStmt returns [IfNode n]
 	  }
 	;
 
+whileStmt returns [WhileNode n]
+	: WHILE LPAREN cond=expr RPAREN body=stmt  { $n = new WhileNode($cond.n, $body.n); }
+	;
+
+breakStmt returns [BreakNode n]
+	: BREAK SEMICOLON  { $n = new BreakNode(); }
+	;
+
+continueStmt returns [ContinueNode n]
+	: CONTINUE SEMICOLON  { $n = new ContinueNode(); }
+	;
+
 block returns [BlockNode n]
 @init { List<StmtNode> stmts = new ArrayList<>(); }
 	: LBRACE ( stmt { stmts.add($stmt.n); } )* RBRACE { $n = new BlockNode(stmts); }
@@ -79,12 +94,13 @@ exprList returns [List<ExprNode> ns]
 	;
 
 expr returns [ExprNode n]
-	: l=expr op=('*'|'/') r=expr  { $n = new BinOpNode($op.type, $l.n, $r.n); }
-	| l=expr op=('+'|'-') r=expr  { $n = new BinOpNode($op.type, $l.n, $r.n); }
-	| INTLIT                      { $n = new IntLiteralNode($INTLIT.int); }
-	| IDT LPAREN exprList? RPAREN { $n = new FuncCallNode($IDT.text, $exprList.ctx == null ? new ArrayList<>() : $exprList.ns); }
-	| var                         { $n = $var.n; }
-	| LPAREN expr RPAREN          { $n = $expr.n; }
+	: l=expr op=('*'|'/') r=expr                      { $n = new BinOpNode($op.type, $l.n, $r.n); }
+	| l=expr op=('+'|'-') r=expr                      { $n = new BinOpNode($op.type, $l.n, $r.n); }
+	| l=expr op=('=='|'!='|'>'|'<'|'>='|'<=') r=expr  { $n = new BinOpNode($op.type, $l.n, $r.n); }
+	| INTLIT                                          { $n = new IntLiteralNode($INTLIT.int); }
+	| IDT LPAREN exprList? RPAREN                     { $n = new FuncCallNode($IDT.text, $exprList.ctx == null ? new ArrayList<>() : $exprList.ns); }
+	| var                                             { $n = $var.n; }
+	| LPAREN expr RPAREN                              { $n = $expr.n; }
 	;
 
 var returns [VarRefNode n]
@@ -102,6 +118,9 @@ VOID : 'void' ;
 RETURN : 'return' ;
 IF : 'if' ;
 ELSE : 'else' ;
+WHILE : 'while' ;
+BREAK : 'break' ;
+CONTINUE : 'continue' ;
 
 MUL : '*' ;
 DIV : '/' ;
@@ -116,6 +135,13 @@ LBRACK : '[' ;
 RBRACK : ']' ;
 SEMICOLON : ';' ;
 EQ : '=' ;
+
+EQEQ : '==' ;
+NOTEQ : '!=' ;
+GT : '>' ;
+LT : '<' ;
+GTE : '>=' ;
+LTE : '<=' ;
 
 IDT : [a-z]+ ;
 INTLIT : [0-9]+ ;

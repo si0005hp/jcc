@@ -4,8 +4,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
-import org.stringtemplate.v4.compiler.CodeGenerator.conditional_return;
-
 public class CodeExecutor {
     
     private final LinkedList<Long> stack = new LinkedList<>();

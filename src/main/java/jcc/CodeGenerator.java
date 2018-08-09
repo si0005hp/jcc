@@ -2,7 +2,13 @@ package jcc;
 
 import static jcc.JccParser.ADD;
 import static jcc.JccParser.DIV;
+import static jcc.JccParser.EQEQ;
+import static jcc.JccParser.GT;
+import static jcc.JccParser.GTE;
+import static jcc.JccParser.LT;
+import static jcc.JccParser.LTE;
 import static jcc.JccParser.MUL;
+import static jcc.JccParser.NOTEQ;
 import static jcc.JccParser.SUB;
 
 import java.util.ArrayList;
@@ -14,6 +20,8 @@ import java.util.Map;
 import jcc.Code.Instruction;
 import jcc.ast.BinOpNode;
 import jcc.ast.BlockNode;
+import jcc.ast.BreakNode;
+import jcc.ast.ContinueNode;
 import jcc.ast.ExprNode;
 import jcc.ast.ExprStmtNode;
 import jcc.ast.FuncCallNode;
@@ -26,6 +34,7 @@ import jcc.ast.VarDefNode;
 import jcc.ast.VarInitNode;
 import jcc.ast.VarLetNode;
 import jcc.ast.VarRefNode;
+import jcc.ast.WhileNode;
 import lombok.Getter;
 
 @Getter
@@ -112,6 +121,12 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         case DIV:
             codes.add(new Code(Instruction.DIV));
             break;
+        case EQEQ:
+        case NOTEQ:
+        case GT:
+        case LT:
+        case GTE:
+        case LTE:
         default:
             throw new IllegalArgumentException(String.valueOf(n.getOpType()));
         }
@@ -198,6 +213,38 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
             codes.add(new Code(Instruction.LABEL, fiAddr));
             fiAddr.setVal(codes.size() - 1);
         }
+        return null;
+    }
+
+    @Override
+    public Void visit(WhileNode n) {
+        MutableLong entAddr = MutableLong.of(0);
+        MutableLong exitAddr = MutableLong.of(0);
+        
+        codes.add(new Code(Instruction.LABEL, entAddr));
+        n.getCond().accept(this);
+        codes.add(new Code(Instruction.JZ, exitAddr));
+        
+        fScope.pushContinue(entAddr);
+        fScope.pushBreak(exitAddr);
+        n.getBody().accept(this);
+        fScope.popBreak();
+        fScope.popContinue();
+        
+        codes.add(new Code(Instruction.JMP, entAddr));
+        codes.add(new Code(Instruction.LABEL, exitAddr));
+        return null;
+    }
+
+    @Override
+    public Void visit(BreakNode n) {
+        codes.add(new Code(Instruction.JMP, fScope.getBreakPoint()));
+        return null;
+    }
+
+    @Override
+    public Void visit(ContinueNode n) {
+        codes.add(new Code(Instruction.JMP, fScope.getContinuePoint()));
         return null;
     }
 
