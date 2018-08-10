@@ -19,4 +19,9 @@ public class MutableLong {
     public void dec() {
         this.val--;
     }
+    
+    @Override
+    public String toString() {
+        return String.valueOf(val);
+    }
 }

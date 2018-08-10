@@ -26,7 +26,7 @@ public class Code {
         JZ,
         JMP,
         LABEL,
-        
+        CMP,
     }
     
     private final Instruction inst;

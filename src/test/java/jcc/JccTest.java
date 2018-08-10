@@ -48,6 +48,12 @@ public class JccTest {
     }
     
     @Test
+    public void cmp() {
+        assertThat(runF("cmp/cmp1.c"), is(1));
+        assertThat(runF("cmp/cmp2.c"), is(212));
+    }
+    
+    @Test
     public void others() {
         assertThat(runF("others/expr_stmt.c"), is(9));
     }

@@ -127,6 +127,8 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         case LT:
         case GTE:
         case LTE:
+            codes.add(new Code(Instruction.CMP, MutableLong.of(n.getOpType())));
+            break;
         default:
             throw new IllegalArgumentException(String.valueOf(n.getOpType()));
         }

@@ -1,5 +1,12 @@
 package jcc;
 
+import static jcc.JccParser.EQEQ;
+import static jcc.JccParser.GT;
+import static jcc.JccParser.GTE;
+import static jcc.JccParser.LT;
+import static jcc.JccParser.LTE;
+import static jcc.JccParser.NOTEQ;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -47,6 +54,19 @@ public class CodeExecutor {
             case DIV:
                 y = stack.removeLast(); x = stack.removeLast();
                 stack.add(x / y);
+                break;
+            case CMP:
+                y = stack.removeLast(); x = stack.removeLast();
+                switch (c.getOperand().asInt()) {
+                case EQEQ: stack.add(y == x ? 1L : 0L); break;
+                case NOTEQ: stack.add(y != x ? 1L : 0L); break;
+                case GT: stack.add(y > x ? 1L : 0L); break;
+                case LT: stack.add(y < x ? 1L : 0L); break;
+                case GTE: stack.add(y >= x ? 1L : 0L); break;
+                case LTE: stack.add(y <= x ? 1L : 0L); break;
+                default:
+                    throw new IllegalArgumentException(c.getOperand().toString());
+                }
                 break;
             case RET:
                 if (c.getOperand().getVal() == 0) {
