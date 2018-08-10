@@ -79,11 +79,11 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
 
     @Override
     public Void visit(BlockNode n) {
-        fScope.addScope();
+        fScope.pushScope();
         
         n.getStmts().forEach(s -> s.accept(this));
         
-        fScope.removeScope();
+        fScope.popScope();
         return null;
     }
 
@@ -197,46 +197,46 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
 
     @Override
     public Void visit(IfNode n) {
-        MutableLong elseAddr = MutableLong.of(0);
-        MutableLong fiAddr = MutableLong.of(0);
+        MutableLong elseLbl = MutableLong.of(0);
+        MutableLong fiLbl = MutableLong.of(0);
         
         n.getCond().accept(this);
-        codes.add(new Code(Instruction.JZ, elseAddr));
+        codes.add(new Code(Instruction.JZ, elseLbl));
         n.getThenBody().accept(this);
         
         if (n.getElseBody() == null) {
-            codes.add(new Code(Instruction.LABEL, elseAddr));
-            elseAddr.setVal(codes.size() - 1);
+            codes.add(new Code(Instruction.LABEL, elseLbl));
+            elseLbl.setVal(codes.size() - 1);
         } else {
-            codes.add(new Code(Instruction.JMP, fiAddr));
-            codes.add(new Code(Instruction.LABEL, elseAddr));
-            elseAddr.setVal(codes.size() - 1);
+            codes.add(new Code(Instruction.JMP, fiLbl));
+            codes.add(new Code(Instruction.LABEL, elseLbl));
+            elseLbl.setVal(codes.size() - 1);
             n.getElseBody().accept(this);
-            codes.add(new Code(Instruction.LABEL, fiAddr));
-            fiAddr.setVal(codes.size() - 1);
+            codes.add(new Code(Instruction.LABEL, fiLbl));
+            fiLbl.setVal(codes.size() - 1);
         }
         return null;
     }
 
     @Override
     public Void visit(WhileNode n) {
-        MutableLong entAddr = MutableLong.of(0);
-        MutableLong exitAddr = MutableLong.of(0);
+        MutableLong entLbl = MutableLong.of(0);
+        MutableLong exitLbl = MutableLong.of(0);
         
-        codes.add(new Code(Instruction.LABEL, entAddr));
-        entAddr.setVal(codes.size() - 1);
+        codes.add(new Code(Instruction.LABEL, entLbl));
+        entLbl.setVal(codes.size() - 1);
         n.getCond().accept(this);
-        codes.add(new Code(Instruction.JZ, exitAddr));
+        codes.add(new Code(Instruction.JZ, exitLbl));
         
-        fScope.pushContinue(entAddr);
-        fScope.pushBreak(exitAddr);
+        fScope.pushContinue(entLbl);
+        fScope.pushBreak(exitLbl);
         n.getBody().accept(this);
         fScope.popBreak();
         fScope.popContinue();
         
-        codes.add(new Code(Instruction.JMP, entAddr));
-        codes.add(new Code(Instruction.LABEL, exitAddr));
-        exitAddr.setVal(codes.size() - 1);
+        codes.add(new Code(Instruction.JMP, entLbl));
+        codes.add(new Code(Instruction.LABEL, exitLbl));
+        exitLbl.setVal(codes.size() - 1);
         return null;
     }
 

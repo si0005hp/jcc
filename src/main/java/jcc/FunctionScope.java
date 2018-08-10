@@ -24,14 +24,14 @@ public class FunctionScope {
     /**
      * Supposed to be called by each block starts
      */
-    public void addScope() {
+    public void pushScope() {
         scopeStack.add(new HashMap<>());
     }
 
     /**
      * Supposed to be called by each block ends
      */
-    public void removeScope() {
+    public void popScope() {
         scopeStack.removeLast();
     }
 
