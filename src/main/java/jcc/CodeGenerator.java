@@ -224,6 +224,7 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         MutableLong exitAddr = MutableLong.of(0);
         
         codes.add(new Code(Instruction.LABEL, entAddr));
+        entAddr.setVal(codes.size() - 1);
         n.getCond().accept(this);
         codes.add(new Code(Instruction.JZ, exitAddr));
         
@@ -235,6 +236,7 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         
         codes.add(new Code(Instruction.JMP, entAddr));
         codes.add(new Code(Instruction.LABEL, exitAddr));
+        exitAddr.setVal(codes.size() - 1);
         return null;
     }
 

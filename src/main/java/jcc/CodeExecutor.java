@@ -58,12 +58,12 @@ public class CodeExecutor {
             case CMP:
                 y = stack.removeLast(); x = stack.removeLast();
                 switch (c.getOperand().asInt()) {
-                case EQEQ: stack.add(y == x ? 1L : 0L); break;
-                case NOTEQ: stack.add(y != x ? 1L : 0L); break;
-                case GT: stack.add(y > x ? 1L : 0L); break;
-                case LT: stack.add(y < x ? 1L : 0L); break;
-                case GTE: stack.add(y >= x ? 1L : 0L); break;
-                case LTE: stack.add(y <= x ? 1L : 0L); break;
+                case EQEQ: stack.add(x == y ? 1L : 0L); break;
+                case NOTEQ: stack.add(x != y ? 1L : 0L); break;
+                case GT: stack.add(x > y ? 1L : 0L); break;
+                case LT: stack.add(x < y ? 1L : 0L); break;
+                case GTE: stack.add(x >= y ? 1L : 0L); break;
+                case LTE: stack.add(x <= y ? 1L : 0L); break;
                 default:
                     throw new IllegalArgumentException(c.getOperand().toString());
                 }
