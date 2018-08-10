@@ -7,6 +7,7 @@ import static jcc.JccParser.GT;
 import static jcc.JccParser.GTE;
 import static jcc.JccParser.LT;
 import static jcc.JccParser.LTE;
+import static jcc.JccParser.MOD;
 import static jcc.JccParser.MUL;
 import static jcc.JccParser.NOTEQ;
 import static jcc.JccParser.SUB;
@@ -120,6 +121,9 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
             break;
         case DIV:
             codes.add(new Code(Instruction.DIV));
+            break;
+        case MOD:
+            codes.add(new Code(Instruction.MOD));
             break;
         case EQEQ:
         case NOTEQ:

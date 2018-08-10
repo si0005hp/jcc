@@ -16,6 +16,7 @@ public class Code {
         SUB,
         MUL,
         DIV,
+        MOD,
         FRAME,
         STOREL,
         LOADL,

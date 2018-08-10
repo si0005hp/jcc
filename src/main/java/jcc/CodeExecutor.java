@@ -55,6 +55,10 @@ public class CodeExecutor {
                 y = stack.removeLast(); x = stack.removeLast();
                 stack.add(x / y);
                 break;
+            case MOD:
+                y = stack.removeLast(); x = stack.removeLast();
+                stack.add(x % y);
+                break;
             case CMP:
                 y = stack.removeLast(); x = stack.removeLast();
                 switch (c.getOperand().asInt()) {

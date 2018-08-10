@@ -94,7 +94,7 @@ exprList returns [List<ExprNode> ns]
 	;
 
 expr returns [ExprNode n]
-	: l=expr op=('*'|'/') r=expr                      { $n = new BinOpNode($op.type, $l.n, $r.n); }
+	: l=expr op=('*'|'/'|'%') r=expr                  { $n = new BinOpNode($op.type, $l.n, $r.n); }
 	| l=expr op=('+'|'-') r=expr                      { $n = new BinOpNode($op.type, $l.n, $r.n); }
 	| l=expr op=('=='|'!='|'>'|'<'|'>='|'<=') r=expr  { $n = new BinOpNode($op.type, $l.n, $r.n); }
 	| INTLIT                                          { $n = new IntLiteralNode($INTLIT.int); }
@@ -126,6 +126,7 @@ MUL : '*' ;
 DIV : '/' ;
 ADD : '+' ;
 SUB : '-' ;
+MOD : '%' ;
 
 LBRACE : '{' ;	
 RBRACE : '}' ;
