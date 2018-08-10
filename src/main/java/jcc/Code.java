@@ -17,6 +17,7 @@ public class Code {
         MUL,
         DIV,
         MOD,
+        BSHIFT,
         FRAME,
         STOREL,
         LOADL,

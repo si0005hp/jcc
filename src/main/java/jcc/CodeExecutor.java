@@ -1,11 +1,6 @@
 package jcc;
 
-import static jcc.JccParser.EQEQ;
-import static jcc.JccParser.GT;
-import static jcc.JccParser.GTE;
-import static jcc.JccParser.LT;
-import static jcc.JccParser.LTE;
-import static jcc.JccParser.NOTEQ;
+import static jcc.JccParser.*;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -58,6 +53,15 @@ public class CodeExecutor {
             case MOD:
                 y = stack.removeLast(); x = stack.removeLast();
                 stack.add(x % y);
+                break;
+            case BSHIFT:
+                y = stack.removeLast(); x = stack.removeLast();
+                switch (c.getOperand().asInt()) {
+                case LSHIFT: stack.add(x << y); break;
+                case RSHIFT: stack.add(x >> y); break;
+                default:
+                    throw new IllegalArgumentException(c.getOperand().toString());
+                }
                 break;
             case CMP:
                 y = stack.removeLast(); x = stack.removeLast();

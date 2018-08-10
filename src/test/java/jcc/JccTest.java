@@ -18,6 +18,7 @@ public class JccTest {
         assertThat(runF("arithmetic/arithmetic2.c"), is(18));
         assertThat(runF("arithmetic/arithmetic3.c"), is(16));
         assertThat(runF("arithmetic/arithmetic4.c"), is(1));
+        assertThat(runF("arithmetic/arithmetic5.c"), is(65));
     }
     
     @Test

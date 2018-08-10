@@ -1,16 +1,6 @@
 package jcc;
 
-import static jcc.JccParser.ADD;
-import static jcc.JccParser.DIV;
-import static jcc.JccParser.EQEQ;
-import static jcc.JccParser.GT;
-import static jcc.JccParser.GTE;
-import static jcc.JccParser.LT;
-import static jcc.JccParser.LTE;
-import static jcc.JccParser.MOD;
-import static jcc.JccParser.MUL;
-import static jcc.JccParser.NOTEQ;
-import static jcc.JccParser.SUB;
+import static jcc.JccParser.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -124,6 +114,10 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
             break;
         case MOD:
             codes.add(new Code(Instruction.MOD));
+            break;
+        case LSHIFT:
+        case RSHIFT:
+            codes.add(new Code(Instruction.BSHIFT, MutableLong.of(n.getOpType())));
             break;
         case EQEQ:
         case NOTEQ:
