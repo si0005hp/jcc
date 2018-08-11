@@ -1,6 +1,13 @@
 package jcc;
 
-import static jcc.JccParser.*;
+import static jcc.JccParser.EQEQ;
+import static jcc.JccParser.GT;
+import static jcc.JccParser.GTE;
+import static jcc.JccParser.LSHIFT;
+import static jcc.JccParser.LT;
+import static jcc.JccParser.LTE;
+import static jcc.JccParser.NOTEQ;
+import static jcc.JccParser.RSHIFT;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -11,10 +18,12 @@ public class CodeExecutor {
     private final LinkedList<Long> stack = new LinkedList<>();
     
     private final List<Code> codes;
+    private final ConstTable ctbl;
     private final int mainAddr;
     
     public CodeExecutor(CodeGenerator gen) {
         this.codes = gen.getCodes();
+        this.ctbl = gen.getCTbl();
         this.mainAddr = gen.getFuncDefs().get("main").getFuncAddr().asInt();
     }
     
@@ -33,6 +42,9 @@ public class CodeExecutor {
                 break;
             case PUSH:
                 stack.add(c.getOperand().getVal());
+                break;
+            case PUSHS:
+                String s = ctbl.get(c.getOperand().asInt()).getVal();
                 break;
             case ADD:
                 y = stack.removeLast(); x = stack.removeLast();
@@ -132,6 +144,8 @@ public class CodeExecutor {
                 pc = c.getOperand().asInt();
                 continue;
             case LABEL:
+                break;
+            case PRINTF:
                 break;
             default:
                 throw new IllegalArgumentException(c.getInst().name());

@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 public class Code {
     public enum Instruction {
         PUSH,
+        PUSHS,
         RET,
         ENTRY,
         ADD,
@@ -29,6 +30,7 @@ public class Code {
         JMP,
         LABEL,
         CMP,
+        PRINTF, // Temporal
     }
     
     private final Instruction inst;

@@ -19,8 +19,10 @@ import jcc.ast.FuncCallNode;
 import jcc.ast.FuncDefNode;
 import jcc.ast.IfNode;
 import jcc.ast.IntLiteralNode;
+import jcc.ast.PrintfNode;
 import jcc.ast.ProgramNode;
 import jcc.ast.ReturnNode;
+import jcc.ast.StrLiteralNode;
 import jcc.ast.VarDefNode;
 import jcc.ast.VarInitNode;
 import jcc.ast.VarLetNode;
@@ -33,6 +35,7 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
 
     private final List<Code> codes = new ArrayList<>();
     private final Map<String, FuncDefinition> funcDefs = new HashMap<>();
+    private final ConstTable cTbl = new ConstTable();
     
     public void generate(ProgramNode n) {
         n.getFuncDefs().forEach(f -> funcDefs.put(f.getFname(), new FuncDefinition(f, MutableLong.of(0))));
@@ -247,6 +250,24 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     @Override
     public Void visit(ContinueNode n) {
         codes.add(new Code(Instruction.JMP, fScope.getContinuePoint()));
+        return null;
+    }
+
+    @Override
+    public Void visit(PrintfNode n) {
+        n.getFmtStr().accept(this);
+        for (ListIterator<ExprNode> it = n.getArgs().listIterator(n.getArgs().size());
+                it.hasPrevious();) {
+            it.previous().accept(this);
+        }
+        codes.add(new Code(Instruction.PRINTF, MutableLong.of(n.getArgs().size())));
+        return null;
+    }
+
+    @Override
+    public Void visit(StrLiteralNode n) {
+        int symbol = cTbl.add(n.getVal());
+        codes.add(new Code(Instruction.PUSHS, MutableLong.of(symbol)));
         return null;
     }
 

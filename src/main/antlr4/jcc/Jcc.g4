@@ -31,6 +31,7 @@ stmt returns [StmtNode n]
 	| whileStmt     { $n = $whileStmt.n; }
 	| breakStmt     { $n = $breakStmt.n; }
 	| continueStmt  { $n = $continueStmt.n; }
+	| printfStmt    { $n = $printfStmt.n; }
 	| block         { $n = $block.n; }
 	;
 
@@ -74,6 +75,15 @@ continueStmt returns [ContinueNode n]
 	: CONTINUE SEMICOLON  { $n = new ContinueNode(); }
 	;
 
+// Temporal node to compile 'printf' in Jcc
+printfStmt returns [PrintfNode n]
+@init { List<ExprNode> args = new ArrayList<>(); }
+	: 'printf' LPAREN fmtStr=expr ( ',' expr { args.add($expr.n); } )* RPAREN SEMICOLON
+	  {
+	  	$n = new PrintfNode($fmtStr.n, args);
+	  }
+	;
+
 block returns [BlockNode n]
 @init { List<StmtNode> stmts = new ArrayList<>(); }
 	: LBRACE ( stmt { stmts.add($stmt.n); } )* RBRACE { $n = new BlockNode(stmts); }
@@ -99,6 +109,7 @@ expr returns [ExprNode n]
 	| l=expr op=('<<'|'>>') r=expr                    { $n = new BinOpNode($op.type, $l.n, $r.n); }
 	| l=expr op=('=='|'!='|'>'|'<'|'>='|'<=') r=expr  { $n = new BinOpNode($op.type, $l.n, $r.n); }
 	| INTLIT                                          { $n = new IntLiteralNode($INTLIT.int); }
+	| STRLIT                                          { $n = new StrLiteralNode($STRLIT.text); }
 	| IDT LPAREN exprList? RPAREN                     { $n = new FuncCallNode($IDT.text, $exprList.ctx == null ? new ArrayList<>() : $exprList.ns); }
 	| var                                             { $n = $var.n; }
 	| LPAREN expr RPAREN                              { $n = $expr.n; }
@@ -149,6 +160,7 @@ LTE : '<=' ;
 
 IDT : [a-z]+ ;
 INTLIT : [0-9]+ ;
+STRLIT : '"' ('""'|~'"')* '"' ;
 
 NEWLINE : ('\r' '\n'?|'\n') -> skip ;
 WS : [ \t]+ -> skip ;

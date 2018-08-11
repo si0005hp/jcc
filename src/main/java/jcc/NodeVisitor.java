@@ -9,7 +9,9 @@ import jcc.ast.FuncCallNode;
 import jcc.ast.FuncDefNode;
 import jcc.ast.IfNode;
 import jcc.ast.IntLiteralNode;
+import jcc.ast.PrintfNode;
 import jcc.ast.ReturnNode;
+import jcc.ast.StrLiteralNode;
 import jcc.ast.VarDefNode;
 import jcc.ast.VarInitNode;
 import jcc.ast.VarLetNode;
@@ -22,6 +24,7 @@ public interface NodeVisitor<E, S> {
     E visit(BinOpNode n);
     E visit(VarRefNode n);
     E visit(FuncCallNode n);
+    E visit(StrLiteralNode n);
     // stmt
     S visit(BlockNode n);
     S visit(FuncDefNode n);
@@ -34,4 +37,6 @@ public interface NodeVisitor<E, S> {
     S visit(WhileNode n);
     S visit(BreakNode n);
     S visit(ContinueNode n);
+    
+    S visit(PrintfNode n);
 }
