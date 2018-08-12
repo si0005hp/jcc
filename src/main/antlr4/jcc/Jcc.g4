@@ -109,6 +109,7 @@ expr returns [ExprNode n]
 	| l=expr op=('<<'|'>>') r=expr                    { $n = new BinOpNode($op.type, $l.n, $r.n); }
 	| l=expr op=('=='|'!='|'>'|'<'|'>='|'<=') r=expr  { $n = new BinOpNode($op.type, $l.n, $r.n); }
 	| INTLIT                                          { $n = new IntLiteralNode($INTLIT.int); }
+	| CHARLIT                                         { $n = new IntLiteralNode(StrUtils.characterCode($CHARLIT.text)); }
 	| STRLIT                                          { $n = new StrLiteralNode(StrUtils.stringValue($STRLIT.text)); }
 	| IDT LPAREN exprList? RPAREN                     { $n = new FuncCallNode($IDT.text, $exprList.ctx == null ? new ArrayList<>() : $exprList.ns); }
 	| var                                             { $n = $var.n; }
@@ -121,11 +122,13 @@ var returns [VarRefNode n]
 
 type
 	: INT
+	| CHAR
 	| VOID
 	;
 
 
 INT : 'int' ;
+CHAR : 'char' ;
 VOID : 'void' ;
 RETURN : 'return' ;
 IF : 'if' ;
@@ -161,6 +164,7 @@ LTE : '<=' ;
 IDT : [a-z]+ ;
 INTLIT : [0-9]+ ;
 STRLIT : '"' ('""'|~'"')* '"' ;
+CHARLIT : '\'' (~'\'')+ '\'' ;
 
 NEWLINE : ('\r' '\n'?|'\n') -> skip ;
 WS : [ \t]+ -> skip ;

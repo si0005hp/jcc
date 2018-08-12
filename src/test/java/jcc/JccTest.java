@@ -65,6 +65,13 @@ public class JccTest {
         assertThat(runF("whilestmt/while2.c"), is(32));
         assertThat(runF("whilestmt/while3.c"), is(16));
     }
+    
+    @Test
+    public void character() {
+        assertThat(runF("character/char1.c"), is((int)'a'));
+        assertThat(runF("character/char2.c"), is((int)'a' + (int)'b'));
+//        assertThat(runF("character/char3.c"), is('a'));
+    }
 
     @Test
     public void others() {

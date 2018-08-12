@@ -79,7 +79,7 @@ public class StrUtils {
         }
     }
     
-    private static long characterCode(String text) {
+    public static long characterCode(String text) {
         String s = stringValue(text);
         return (long)s.charAt(s.length() - 1);
     }
