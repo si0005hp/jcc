@@ -1,5 +1,6 @@
 package jcc;
 
+import jcc.value.JccValue;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 public class Code {
     public enum Instruction {
         PUSH,
-        PUSHS,
+        PUSHP,
         RET,
         ENTRY,
         ADD,
@@ -34,5 +35,5 @@ public class Code {
     }
     
     private final Instruction inst;
-    private MutableLong operand;
+    private JccValue operand;
 }

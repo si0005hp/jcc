@@ -6,13 +6,14 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Optional;
 
+import jcc.value.IntegerValue;
 import lombok.Getter;
 
 @Getter
 public class FunctionScope {
     private final LinkedList<Map<String, LvarDefinition>> scopeStack = new LinkedList<>();
-    private final LinkedList<MutableLong> breakStack = new LinkedList<>();
-    private final LinkedList<MutableLong> continueStack = new LinkedList<>();
+    private final LinkedList<IntegerValue> breakStack = new LinkedList<>();
+    private final LinkedList<IntegerValue> continueStack = new LinkedList<>();
 
     private int argIdx = 0;
     private int lvarIdx = 0;
@@ -66,7 +67,7 @@ public class FunctionScope {
         return Optional.empty();
     }
 
-    public void pushBreak(MutableLong exitAddr) {
+    public void pushBreak(IntegerValue exitAddr) {
         breakStack.add(exitAddr);
     }
 
@@ -74,11 +75,11 @@ public class FunctionScope {
         breakStack.removeLast();
     }
     
-    public MutableLong getBreakPoint() {
+    public IntegerValue getBreakPoint() {
         return breakStack.getLast();
     }
 
-    public void pushContinue(MutableLong entAddr) {
+    public void pushContinue(IntegerValue entAddr) {
         continueStack.add(entAddr);
     }
 
@@ -86,7 +87,7 @@ public class FunctionScope {
         continueStack.removeLast();
     }
     
-    public MutableLong getContinuePoint() {
+    public IntegerValue getContinuePoint() {
         return continueStack.getLast();
     }
 }

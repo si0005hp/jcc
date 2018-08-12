@@ -109,7 +109,7 @@ expr returns [ExprNode n]
 	| l=expr op=('<<'|'>>') r=expr                    { $n = new BinOpNode($op.type, $l.n, $r.n); }
 	| l=expr op=('=='|'!='|'>'|'<'|'>='|'<=') r=expr  { $n = new BinOpNode($op.type, $l.n, $r.n); }
 	| INTLIT                                          { $n = new IntLiteralNode($INTLIT.int); }
-	| STRLIT                                          { $n = new StrLiteralNode($STRLIT.text); }
+	| STRLIT                                          { $n = new StrLiteralNode(StrUtils.stringValue($STRLIT.text)); }
 	| IDT LPAREN exprList? RPAREN                     { $n = new FuncCallNode($IDT.text, $exprList.ctx == null ? new ArrayList<>() : $exprList.ns); }
 	| var                                             { $n = $var.n; }
 	| LPAREN expr RPAREN                              { $n = $expr.n; }

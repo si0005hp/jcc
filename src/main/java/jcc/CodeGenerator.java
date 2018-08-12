@@ -28,6 +28,8 @@ import jcc.ast.VarInitNode;
 import jcc.ast.VarLetNode;
 import jcc.ast.VarRefNode;
 import jcc.ast.WhileNode;
+import jcc.value.IntegerValue;
+import jcc.value.PointerValue;
 import lombok.Getter;
 
 @Getter
@@ -38,14 +40,14 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     private final ConstTable cTbl = new ConstTable();
     
     public void generate(ProgramNode n) {
-        n.getFuncDefs().forEach(f -> funcDefs.put(f.getFname(), new FuncDefinition(f, MutableLong.of(0))));
+        n.getFuncDefs().forEach(f -> funcDefs.put(f.getFname(), new FuncDefinition(f, IntegerValue.of(0))));
         n.getFuncDefs().forEach(f -> f.accept(this));
     }
     
     void debugCode() {
         codes.stream()
             .map(c -> String.format("%s\t%s", c.getInst().name(),
-                    c.getOperand() == null ? "" : c.getOperand().getVal()))
+                    c.getOperand() == null ? "" : c.getOperand().toString()))
             .forEach(System.out::println);
     }
     
@@ -55,10 +57,10 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         fScope = new FunctionScope(); // Initialize func scope
         
         FuncDefinition fd = funcDefs.get(n.getFname());
-        fd.getFuncAddr().setVal(codes.size()); // Set idx of code as FuncAddr
+        fd.getFuncAddr().setVal(codes.size());; // Set idx of code as FuncAddr
         codes.add(new Code(Instruction.ENTRY, fd.getFuncAddr()));
         
-        MutableLong lvarCnt = MutableLong.of(0);
+        IntegerValue lvarCnt = IntegerValue.of(0);
         codes.add(new Code(Instruction.FRAME, lvarCnt));
         
         // Process func args (Register args to func scope)
@@ -85,16 +87,16 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     public Void visit(ReturnNode n) {
         if (n.getExpr() != null) {
             n.getExpr().accept(this);
-            codes.add(new Code(Instruction.RET, MutableLong.of(0))); // With retval
+            codes.add(new Code(Instruction.RET, IntegerValue.of(0))); // With retval
         } else {
-            codes.add(new Code(Instruction.RET, MutableLong.of(1))); // No retval
+            codes.add(new Code(Instruction.RET, IntegerValue.of(1))); // No retval
         }
         return null;
     }
 
     @Override
     public Void visit(IntLiteralNode n) {
-        codes.add(new Code(Instruction.PUSH, MutableLong.of(n.getVal())));
+        codes.add(new Code(Instruction.PUSH, IntegerValue.of(n.getVal())));
         return null;
     }
 
@@ -104,23 +106,23 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         n.getRight().accept(this);
         switch (n.getOpType()) {
         case ADD:
-            codes.add(new Code(Instruction.ADD));
+            codes.add(new Code(Instruction.ADD, IntegerValue.of(0)));
             break;
         case SUB:
-            codes.add(new Code(Instruction.SUB));
+            codes.add(new Code(Instruction.SUB, IntegerValue.of(0)));
             break;
         case MUL:
-            codes.add(new Code(Instruction.MUL));
+            codes.add(new Code(Instruction.MUL, IntegerValue.of(0)));
             break;
         case DIV:
-            codes.add(new Code(Instruction.DIV));
+            codes.add(new Code(Instruction.DIV, IntegerValue.of(0)));
             break;
         case MOD:
-            codes.add(new Code(Instruction.MOD));
+            codes.add(new Code(Instruction.MOD, IntegerValue.of(0)));
             break;
         case LSHIFT:
         case RSHIFT:
-            codes.add(new Code(Instruction.BSHIFT, MutableLong.of(n.getOpType())));
+            codes.add(new Code(Instruction.BSHIFT, IntegerValue.of(n.getOpType())));
             break;
         case EQEQ:
         case NOTEQ:
@@ -128,7 +130,7 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         case LT:
         case GTE:
         case LTE:
-            codes.add(new Code(Instruction.CMP, MutableLong.of(n.getOpType())));
+            codes.add(new Code(Instruction.CMP, IntegerValue.of(n.getOpType())));
             break;
         default:
             throw new IllegalArgumentException(String.valueOf(n.getOpType()));
@@ -140,9 +142,9 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     public Void visit(VarRefNode n) {
         LvarDefinition var = fScope.getVar(n.getVname());
         if (var.isArg()) {
-            codes.add(new Code(Instruction.LOADA, MutableLong.of(var.getIdx())));
+            codes.add(new Code(Instruction.LOADA, IntegerValue.of(var.getIdx())));
         } else {
-            codes.add(new Code(Instruction.LOADL, MutableLong.of(var.getIdx())));
+            codes.add(new Code(Instruction.LOADL, IntegerValue.of(var.getIdx())));
         }
         return null;
     }
@@ -152,9 +154,9 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         n.getExpr().accept(this);
         LvarDefinition var = fScope.getVar(n.getVar().getVname());
         if (var.isArg()) {
-            codes.add(new Code(Instruction.STOREA, MutableLong.of(var.getIdx())));
+            codes.add(new Code(Instruction.STOREA, IntegerValue.of(var.getIdx())));
         } else {
-            codes.add(new Code(Instruction.STOREL, MutableLong.of(var.getIdx())));
+            codes.add(new Code(Instruction.STOREL, IntegerValue.of(var.getIdx())));
         }
         return null;
     }
@@ -169,7 +171,7 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     public Void visit(VarInitNode n) {
         LvarDefinition var = fScope.addLvar(n.getLvar().getType(), n.getLvar().getVname());
         n.getExpr().accept(this);
-        codes.add(new Code(Instruction.STOREL, MutableLong.of(var.getIdx())));
+        codes.add(new Code(Instruction.STOREL, IntegerValue.of(var.getIdx())));
         return null;
     }
 
@@ -186,7 +188,7 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
             it.previous().accept(this);
         }
         codes.add(new Code(Instruction.CALL, fd.getFuncAddr()));
-        codes.add(new Code(Instruction.POPR, MutableLong.of(n.getArgs().size())));
+        codes.add(new Code(Instruction.POPR, IntegerValue.of(n.getArgs().size())));
         return null;
     }
 
@@ -198,8 +200,8 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
 
     @Override
     public Void visit(IfNode n) {
-        MutableLong elseLbl = MutableLong.of(0);
-        MutableLong fiLbl = MutableLong.of(0);
+        IntegerValue elseLbl = IntegerValue.of(0);
+        IntegerValue fiLbl = IntegerValue.of(0);
         
         n.getCond().accept(this);
         codes.add(new Code(Instruction.JZ, elseLbl));
@@ -221,8 +223,8 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
 
     @Override
     public Void visit(WhileNode n) {
-        MutableLong entLbl = MutableLong.of(0);
-        MutableLong exitLbl = MutableLong.of(0);
+        IntegerValue entLbl = IntegerValue.of(0);
+        IntegerValue exitLbl = IntegerValue.of(0);
         
         codes.add(new Code(Instruction.LABEL, entLbl));
         entLbl.setVal(codes.size() - 1);
@@ -260,14 +262,15 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
                 it.hasPrevious();) {
             it.previous().accept(this);
         }
-        codes.add(new Code(Instruction.PRINTF, MutableLong.of(n.getArgs().size())));
+        codes.add(new Code(Instruction.PRINTF, IntegerValue.of(n.getArgs().size())));
         return null;
     }
 
     @Override
     public Void visit(StrLiteralNode n) {
-        int symbol = cTbl.add(n.getVal());
-        codes.add(new Code(Instruction.PUSHS, MutableLong.of(symbol)));
+        cTbl.add(n.getVal());
+        PointerValue<Character> p = new PointerValue<>(0, StrUtils.strToCharacterArray(n.getVal()));
+        codes.add(new Code(Instruction.PUSHP, p));
         return null;
     }
 
