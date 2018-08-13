@@ -1,7 +1,7 @@
 package jcc.ast;
 
-import jcc.CType;
 import jcc.NodeVisitor;
+import jcc.type.Type;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -10,7 +10,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = false)
 @AllArgsConstructor
 public class VarDefNode extends StmtNode {
-    private CType type;
+    private Type type;
     private String vname;
 
     @Override

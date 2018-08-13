@@ -2,8 +2,7 @@ grammar Jcc;
 
 @header {
 import jcc.ast.*;
-// import java.util.*;
-// import java.util.stream.*;
+import jcc.type.*;
 }
 
 @parser::members {
@@ -17,7 +16,7 @@ program returns [ProgramNode n]
 funcDef returns [FuncDefNode n]
 	: type IDT LPAREN funcParams? RPAREN block
 	  {
-	  	$n = new FuncDefNode(CType.of($type.text), $IDT.text, $funcParams.ctx == null ? new ArrayList<>() : $funcParams.e, $block.n);
+	  	$n = new FuncDefNode($type.t, $IDT.text, $funcParams.ctx == null ? new ArrayList<>() : $funcParams.e, $block.n);
 	  }
 	;
 
@@ -36,11 +35,11 @@ stmt returns [StmtNode n]
 	;
 
 varDefStmt returns [VarDefNode n]
-	: type IDT SEMICOLON  { $n = new VarDefNode(CType.of($type.text), $IDT.text); }
+	: type IDT SEMICOLON  { $n = new VarDefNode($type.t, $IDT.text); }
 	;
 
 varInitStmt returns [VarInitNode n]
-	: type IDT EQ expr SEMICOLON  { $n = new VarInitNode(new VarDefNode(CType.of($type.text), $IDT.text), $expr.n); }
+	: type IDT EQ expr SEMICOLON  { $n = new VarInitNode(new VarDefNode($type.t, $IDT.text), $expr.n); }
 	;
 
 varLetStmt returns [VarLetNode n]
@@ -95,7 +94,7 @@ funcParams returns [List<FuncDefNode.ParamDef> e]
 	;
 
 paramDef returns [FuncDefNode.ParamDef e]
-	: type IDT  { $e = new FuncDefNode.ParamDef(CType.of($type.text), $IDT.text); }
+	: type IDT  { $e = new FuncDefNode.ParamDef($type.t, $IDT.text); }
 	;
 
 exprList returns [List<ExprNode> ns]
@@ -120,10 +119,21 @@ var returns [VarRefNode n]
 	: IDT  { $n = new VarRefNode($IDT.text); }
 	;
 
-type
-	: INT
-	| CHAR
-	| VOID
+type returns [Type t]
+	: cType      { $t = IntegerType.of($cType.t); }
+	| cType '*'  { $t = PointerType.of($cType.t); }
+	;
+
+cType returns [CType t]
+	: 
+		(
+	      ct=INT
+		| ct=CHAR
+		| ct=VOID
+		)
+	  {
+	  	$t = CType.of($ct.text);
+	  }
 	;
 
 

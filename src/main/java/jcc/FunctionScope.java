@@ -6,6 +6,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Optional;
 
+import jcc.type.Type;
 import jcc.value.IntegerValue;
 import lombok.Getter;
 
@@ -36,11 +37,11 @@ public class FunctionScope {
         scopeStack.removeLast();
     }
 
-    public LvarDefinition addArg(CType type, String vname) {
+    public LvarDefinition addArg(Type type, String vname) {
         return addVar(new LvarDefinition(type, vname, true, ++argIdx));
     }
 
-    public LvarDefinition addLvar(CType type, String vname) {
+    public LvarDefinition addLvar(Type type, String vname) {
         return addVar(new LvarDefinition(type, vname, false, ++lvarIdx));
     }
 

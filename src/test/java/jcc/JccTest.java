@@ -72,6 +72,11 @@ public class JccTest {
         assertThat(runF("character/char2.c"), is((int)'a' + (int)'b'));
 //        assertThat(runF("character/char3.c"), is('a'));
     }
+    
+    @Test
+    public void pointer() {
+        assertThat(runF("pointer/pointer1.c"), is(0));
+    }
 
     @Test
     public void others() {

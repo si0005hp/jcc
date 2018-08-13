@@ -2,8 +2,8 @@ package jcc.ast;
 
 import java.util.List;
 
-import jcc.CType;
 import jcc.NodeVisitor;
+import jcc.type.Type;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -15,11 +15,11 @@ import lombok.Value;
 public class FuncDefNode extends StmtNode {
     @Value
     public static class ParamDef {
-        private CType type;
+        private Type type;
         private String pname;
     }
 
-    private CType retvalType;
+    private Type retvalType;
     private String fname;
     private List<ParamDef> params;
     private BlockNode block;
