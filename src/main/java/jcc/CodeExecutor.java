@@ -135,6 +135,10 @@ public class CodeExecutor {
                     .orElse(IntegerValue.of(0)); // The case that the variable is not initialized
                 stack.add(y);
                 break;
+            case LOADLA:
+                break;
+            case LOADLP:
+                break;
             case CALL:
                 stack.add(IntegerValue.of(pc + 1));
                 pc = c.getOperand().integer().asInt();
@@ -152,6 +156,10 @@ public class CodeExecutor {
             case LOADA:
                 y = stack.get(fp - (c.getOperand().integer().asInt() + 1));
                 stack.add(y);
+                break;
+            case LOADAA:
+                break;
+            case LOADAP:
                 break;
             case JZ:
                 x = stack.removeLast();

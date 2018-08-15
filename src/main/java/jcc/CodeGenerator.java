@@ -9,10 +9,12 @@ import java.util.ListIterator;
 import java.util.Map;
 
 import jcc.Code.Instruction;
+import jcc.ast.AddressNode;
 import jcc.ast.BinOpNode;
 import jcc.ast.BlockNode;
 import jcc.ast.BreakNode;
 import jcc.ast.ContinueNode;
+import jcc.ast.DereferNode;
 import jcc.ast.ExprNode;
 import jcc.ast.ExprStmtNode;
 import jcc.ast.FuncCallNode;
@@ -96,7 +98,7 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
 
     @Override
     public Void visit(IntLiteralNode n) {
-        codes.add(new Code(Instruction.PUSH, IntegerValue.of(n.getVal())));
+        codes.add(new Code(Instruction.PUSH, IntegerValue.of(n.getCType(), n.getVal())));
         return null;
     }
 
@@ -271,6 +273,16 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         cTbl.add(n.getVal());
         PointerValue<Character> p = new PointerValue<>(0, StrUtils.strToCharacterArray(n.getVal()));
         codes.add(new Code(Instruction.PUSHP, p));
+        return null;
+    }
+
+    @Override
+    public Void visit(AddressNode n) {
+        return null;
+    }
+
+    @Override
+    public Void visit(DereferNode n) {
         return null;
     }
 

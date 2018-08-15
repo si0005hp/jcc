@@ -103,12 +103,14 @@ exprList returns [List<ExprNode> ns]
 	;
 
 expr returns [ExprNode n]
-	: l=expr op=('*'|'/'|'%') r=expr                  { $n = new BinOpNode($op.type, $l.n, $r.n); }
+	: '*' v=var                                       { $n = new DereferNode($v.n); }
+	| '&' v=var                                       { $n = new AddressNode($v.n); }
+	| l=expr op=('*'|'/'|'%') r=expr                  { $n = new BinOpNode($op.type, $l.n, $r.n); }
 	| l=expr op=('+'|'-') r=expr                      { $n = new BinOpNode($op.type, $l.n, $r.n); }
 	| l=expr op=('<<'|'>>') r=expr                    { $n = new BinOpNode($op.type, $l.n, $r.n); }
 	| l=expr op=('=='|'!='|'>'|'<'|'>='|'<=') r=expr  { $n = new BinOpNode($op.type, $l.n, $r.n); }
-	| INTLIT                                          { $n = new IntLiteralNode($INTLIT.int); }
-	| CHARLIT                                         { $n = new IntLiteralNode(StrUtils.characterCode($CHARLIT.text)); }
+	| INTLIT                                          { $n = new IntLiteralNode(CType.INT, $INTLIT.int); }
+	| CHARLIT                                         { $n = new IntLiteralNode(CType.CHAR, StrUtils.characterCode($CHARLIT.text)); }
 	| STRLIT                                          { $n = new StrLiteralNode(StrUtils.stringValue($STRLIT.text)); }
 	| IDT LPAREN exprList? RPAREN                     { $n = new FuncCallNode($IDT.text, $exprList.ctx == null ? new ArrayList<>() : $exprList.ns); }
 	| var                                             { $n = $var.n; }
@@ -146,6 +148,7 @@ ELSE : 'else' ;
 WHILE : 'while' ;
 BREAK : 'break' ;
 CONTINUE : 'continue' ;
+
 
 MUL : '*' ;
 DIV : '/' ;
