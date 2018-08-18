@@ -1,96 +1,92 @@
 package jcc;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.antlr.v4.runtime.CharStreams;
+import org.apache.commons.io.FileUtils;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class JccTest {
 
-    @Test
-    public void arithmetic() {
-        assertThat(runF("arithmetic/arithmetic1.c"), is(0));
-        assertThat(runF("arithmetic/arithmetic2.c"), is(18));
-        assertThat(runF("arithmetic/arithmetic3.c"), is(16));
-        assertThat(runF("arithmetic/arithmetic4.c"), is(1));
-        assertThat(runF("arithmetic/arithmetic5.c"), is(65));
-    }
-
-    @Test
-    public void var() {
-        assertThat(runF("var/var1.c"), is(9));
-        assertThat(runF("var/var2.c"), is(21));
-        assertThat(runF("var/var3.c"), is(30));
-        assertThat(runF("var/var4.c"), is(80));
-        expectedToFail(() -> runF("var/var5.c"));
-        assertThat(runF("var/var6.c"), is(0));
-    }
-
-    @Test
-    public void func() {
-        assertThat(runF("func/func1.c"), is(9));
-        assertThat(runF("func/func2.c"), is(11));
-        assertThat(runF("func/func3.c"), is(9));
-        assertThat(runF("func/func4.c"), is(8));
-        assertThat(runF("func/func5.c"), is(20));
-        expectedToFail(() -> runF("func/func6.c"));
-    }
-
-    @Test
-    public void ifstmt() {
-        assertThat(runF("ifstmt/if1.c"), is(15));
-        assertThat(runF("ifstmt/if2.c"), is(25));
-        assertThat(runF("ifstmt/if3.c"), is(34));
-        assertThat(runF("ifstmt/if4.c"), is(149));
-    }
-
-    @Test
-    public void cmp() {
-        assertThat(runF("cmp/cmp1.c"), is(1));
-        assertThat(runF("cmp/cmp2.c"), is(212));
-    }
-
-    @Test
-    public void whilestmt() {
-        assertThat(runF("whilestmt/while1.c"), is(32));
-        assertThat(runF("whilestmt/while2.c"), is(32));
-        assertThat(runF("whilestmt/while3.c"), is(16));
+    private static final List<String> testList = new ArrayList<>();
+    private static final String pattern = ".*";
+    
+    @BeforeClass
+    public static void setup() throws IOException, URISyntaxException {
+        File outputDir = new File(getOutputDirPath());
+        FileUtils.deleteQuietly(outputDir);
+        FileUtils.forceMkdir(outputDir);
+        
+        File testListFile = new File(JccTest.class.getResource("test.list").toURI());
+        readTestList(testListFile, testList);
+        FileUtils.copyFileToDirectory(testListFile, outputDir);
     }
     
     @Test
-    public void character() {
-        assertThat(runF("character/char1.c"), is((int)'a'));
-        assertThat(runF("character/char2.c"), is((int)'a' + (int)'b'));
-//        assertThat(runF("character/char3.c"), is('a'));
-    }
-    
-    @Test
-    public void pointer() {
-        assertThat(runF("pointer/pointer1.c"), is(0));
-    }
-
-    @Test
-    public void others() {
-        assertThat(runF("others/expr_stmt.c"), is(9));
-        assertThat(runAndGetSysout(() -> runF("others/printf.c")), 
-                is(perNewLine("Hello world", "No. 1 123 999")));
-    }
-
-    private int runF(String s) {
-        try (InputStream is = getClass().getResourceAsStream(s)) {
-            return Jcc.run(CharStreams.fromStream(is));
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to load file: " + s);
+    public void run() {
+        List<String> targetTests = testList.stream().filter(testFilter(pattern)).collect(Collectors.toList());
+        for (String f : targetTests) {
+            runF(f);
         }
+        System.out.println(String.format("Processed %s files with pattern '%s'.", targetTests.size(), pattern));
+    }
+    
+    private Predicate<String> testFilter(String pattern) {
+        return s -> Pattern.matches(pattern, s);
+    }
+    
+    private static void readTestList(File f, List<String> testList) {
+        try (InputStream is = new FileInputStream(f);
+                InputStreamReader isr = new InputStreamReader(is);
+                BufferedReader br = new BufferedReader(isr);) {
+            String line = null;
+            while ((line = br.readLine()) != null) {
+                testList.add(line.split("\t")[0]);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load file: " + f.getName());
+        }
+    }
+
+    private static String getOutputDirPath() {
+        return System.getProperty("user.dir") + File.separator + "test"; 
+    }
+    
+    private static String getOutputFilePath(String fname) {
+        return getOutputDirPath() + File.separator + getSFileName(fname); 
+    }
+    
+    private void runF(String cFileName) {
+        try (InputStream is = getClass().getResourceAsStream(cFileName);
+                FileOutputStream fos = new FileOutputStream(getOutputFilePath(cFileName));) {
+            Jcc.run(CharStreams.fromStream(is), fos);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load file: " + cFileName);
+        }
+    }
+    
+    private static String getSFileName(String cFileName) {
+        if (!cFileName.endsWith(".c")) {
+            throw new RuntimeException("Illegal cFileName: " + cFileName);
+        }
+        return cFileName.replaceFirst(".c", ".s");
     }
 
     private void expectedToFail(Runnable r) {

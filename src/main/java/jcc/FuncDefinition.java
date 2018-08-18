@@ -5,7 +5,6 @@ import java.util.List;
 import jcc.ast.FuncDefNode;
 import jcc.ast.FuncDefNode.ParamDef;
 import jcc.type.Type;
-import jcc.value.IntegerValue;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -15,9 +14,9 @@ public class FuncDefinition {
     private Type retvalType;
     private String fname;
     private List<ParamDef> params;
-    private IntegerValue funcAddr;
+    private MutableNum funcAddr;
 
-    public FuncDefinition(FuncDefNode n, IntegerValue addr) {
+    public FuncDefinition(FuncDefNode n, MutableNum addr) {
         this.retvalType = n.getRetvalType();
         this.fname = n.getFname();
         this.params = n.getParams();

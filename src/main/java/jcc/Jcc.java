@@ -3,6 +3,7 @@ package jcc;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Arrays;
 
 import org.antlr.v4.gui.TreeViewer;
@@ -22,34 +23,20 @@ public class Jcc {
 
             if (MODE.equals("v")) {
                 treeView(CharStreams.fromStream(is));
-            } else if (MODE.equals("d")) {
-                debugCode(CharStreams.fromStream(is));
             } else {
-                int result = run(CharStreams.fromStream(is));
-                System.out.println(result);
+                run(CharStreams.fromStream(is), System.out);
             }
         }
     }
     
-    static int run(CharStream input) {
+    static void run(CharStream input, OutputStream out) {
         JccParser parser = getParser(input);
         parser.setErrorHandler(new BailErrorStrategy());
         ProgramContext p = parser.program();
         
         CodeGenerator gen = new CodeGenerator();
         gen.generate(p.n);
-        CodeExecutor exec = new CodeExecutor(gen);
-        return exec.execute();
-    }
-    
-    static void debugCode(CharStream input) {
-        JccParser parser = getParser(input);
-        parser.setErrorHandler(new BailErrorStrategy());
-        ProgramContext p = parser.program();
-        
-        CodeGenerator gen = new CodeGenerator();
-        gen.generate(p.n);
-        gen.debugCode();
+        gen.getAsm().write(out);
     }
     
     private static JccParser getParser(CharStream input) {

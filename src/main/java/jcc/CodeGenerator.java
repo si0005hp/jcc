@@ -1,21 +1,17 @@
 package jcc;
 
-import static jcc.JccParser.*;
-
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 
-import jcc.Code.Instruction;
 import jcc.ast.AddressNode;
 import jcc.ast.BinOpNode;
 import jcc.ast.BlockNode;
 import jcc.ast.BreakNode;
 import jcc.ast.ContinueNode;
 import jcc.ast.DereferNode;
-import jcc.ast.ExprNode;
 import jcc.ast.ExprStmtNode;
 import jcc.ast.FuncCallNode;
 import jcc.ast.FuncDefNode;
@@ -30,51 +26,60 @@ import jcc.ast.VarInitNode;
 import jcc.ast.VarLetNode;
 import jcc.ast.VarRefNode;
 import jcc.ast.WhileNode;
-import jcc.value.IntegerValue;
-import jcc.value.PointerValue;
+import jcc.type.VoidType;
 import lombok.Getter;
 
 @Getter
 public class CodeGenerator implements NodeVisitor<Void, Void> {
 
-    private final List<Code> codes = new ArrayList<>();
+    private static final List<String> ARG_REGS = Arrays.asList("rdi", "rsi", "rdx", "rcx", "r8", "r9");
+    
+    private final Asm asm = new Asm();
     private final Map<String, FuncDefinition> funcDefs = new HashMap<>();
     private final ConstTable cTbl = new ConstTable();
-    
+
     public void generate(ProgramNode n) {
-        n.getFuncDefs().forEach(f -> funcDefs.put(f.getFname(), new FuncDefinition(f, IntegerValue.of(0))));
-        n.getFuncDefs().forEach(f -> f.accept(this));
-    }
-    
-    void debugCode() {
-        codes.stream()
-            .map(c -> String.format("%s\t%s", c.getInst().name(),
-                    c.getOperand() == null ? "" : c.getOperand().toString()))
-            .forEach(System.out::println);
+        if (!n.getFuncDefs().isEmpty()) {
+            asm.gen(".text");
+            n.getFuncDefs().forEach(f -> f.accept(this));
+        }
     }
     
     FunctionScope fScope;
     @Override
     public Void visit(FuncDefNode n) {
-        fScope = new FunctionScope(); // Initialize func scope
+        fScope = new FunctionScope();
         
-        FuncDefinition fd = funcDefs.get(n.getFname());
-        fd.getFuncAddr().setVal(codes.size());; // Set idx of code as FuncAddr
-        codes.add(new Code(Instruction.ENTRY, fd.getFuncAddr()));
+        /* prologue */
+        asm.gen(".global %s", n.getFname());
+        asm.gen("%s:", n.getFname());
+        asm.gent("push %%rbp");
+        asm.gent("mov %%rsp, %%rbp");
+        // params
+        MutableNum bOffset = MutableNum.of(0);
+        List<MutableNum> bpIdxs = new ArrayList<>();
+        for (int i = 0; i < n.getParams().size(); i++) {
+            bpIdxs.add(MutableNum.of(0));
+            asm.gent("mov %%%s %s(%%rbp)", ARG_REGS.get(i), bpIdxs.get(i));
+        }
         
-        IntegerValue lvarCnt = IntegerValue.of(0);
-        codes.add(new Code(Instruction.FRAME, lvarCnt));
-        
-        // Process func args (Register args to func scope)
-        fd.getParams().forEach(p -> fScope.addArg(p.getType(), p.getPname()));
-        
-        // Process func body 
+        /* funcBody */
         n.getBlock().accept(this);
+        // fix bpIdxs
+        bOffset.setVal(fScope.getLvarIdx() * -16);
+        for (int i = 0; i < bpIdxs.size(); i++) {
+            bpIdxs.get(i).setVal(-4 * (i + 1) + bOffset.getVal());
+        }
         
-        lvarCnt.setVal(fScope.getLvarIdx()); // Set total count of lvar finally
+        /* epilogue */
+        if (n.getRetvalType() instanceof VoidType) {
+            asm.gent("leave");
+            asm.gent("ret");
+        }
+        
         return null;
     }
-
+    
     @Override
     public Void visit(BlockNode n) {
         fScope.pushScope();
@@ -84,205 +89,107 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         fScope.popScope();
         return null;
     }
-
+    
     @Override
     public Void visit(ReturnNode n) {
-        if (n.getExpr() != null) {
-            n.getExpr().accept(this);
-            codes.add(new Code(Instruction.RET, IntegerValue.of(0))); // With retval
-        } else {
-            codes.add(new Code(Instruction.RET, IntegerValue.of(1))); // No retval
-        }
+        n.getExpr().accept(this);
+        asm.gent("leave");
+        asm.gent("ret");
         return null;
     }
-
+    
     @Override
     public Void visit(IntLiteralNode n) {
-        codes.add(new Code(Instruction.PUSH, IntegerValue.of(n.getCType(), n.getVal())));
+        asm.gent("mov $%d, %%eax", n.getVal());
         return null;
     }
 
     @Override
     public Void visit(BinOpNode n) {
-        n.getLeft().accept(this);
-        n.getRight().accept(this);
-        switch (n.getOpType()) {
-        case ADD:
-            codes.add(new Code(Instruction.ADD, IntegerValue.of(0)));
-            break;
-        case SUB:
-            codes.add(new Code(Instruction.SUB, IntegerValue.of(0)));
-            break;
-        case MUL:
-            codes.add(new Code(Instruction.MUL, IntegerValue.of(0)));
-            break;
-        case DIV:
-            codes.add(new Code(Instruction.DIV, IntegerValue.of(0)));
-            break;
-        case MOD:
-            codes.add(new Code(Instruction.MOD, IntegerValue.of(0)));
-            break;
-        case LSHIFT:
-        case RSHIFT:
-            codes.add(new Code(Instruction.BSHIFT, IntegerValue.of(n.getOpType())));
-            break;
-        case EQEQ:
-        case NOTEQ:
-        case GT:
-        case LT:
-        case GTE:
-        case LTE:
-            codes.add(new Code(Instruction.CMP, IntegerValue.of(n.getOpType())));
-            break;
-        default:
-            throw new IllegalArgumentException(String.valueOf(n.getOpType()));
-        }
+        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public Void visit(VarRefNode n) {
-        LvarDefinition var = fScope.getVar(n.getVname());
-        if (var.isArg()) {
-            codes.add(new Code(Instruction.LOADA, IntegerValue.of(var.getIdx())));
-        } else {
-            codes.add(new Code(Instruction.LOADL, IntegerValue.of(var.getIdx())));
-        }
-        return null;
-    }
-
-    @Override
-    public Void visit(VarLetNode n) {
-        n.getExpr().accept(this);
-        LvarDefinition var = fScope.getVar(n.getVar().getVname());
-        if (var.isArg()) {
-            codes.add(new Code(Instruction.STOREA, IntegerValue.of(var.getIdx())));
-        } else {
-            codes.add(new Code(Instruction.STOREL, IntegerValue.of(var.getIdx())));
-        }
-        return null;
-    }
-
-    @Override
-    public Void visit(VarDefNode n) {
-        fScope.addLvar(n.getType(), n.getVname());
-        return null;
-    }
-    
-    @Override
-    public Void visit(VarInitNode n) {
-        LvarDefinition var = fScope.addLvar(n.getLvar().getType(), n.getLvar().getVname());
-        n.getExpr().accept(this);
-        codes.add(new Code(Instruction.STOREL, IntegerValue.of(var.getIdx())));
+        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public Void visit(FuncCallNode n) {
-        FuncDefinition fd = funcDefs.get(n.getFname());
-        if (fd.getParams().size() != n.getArgs().size()) {
-            throw new RuntimeException(String.format("Inconsistent arg counts '%s' for '%s'. "
-                    + "Expected: %s", n.getArgs().size(), n.getFname(), fd.getParams().size()));
-        }
-        // Push args
-        for (ListIterator<ExprNode> it = n.getArgs().listIterator(n.getArgs().size());
-                it.hasPrevious();) {
-            it.previous().accept(this);
-        }
-        codes.add(new Code(Instruction.CALL, fd.getFuncAddr()));
-        codes.add(new Code(Instruction.POPR, IntegerValue.of(n.getArgs().size())));
-        return null;
-    }
-
-    @Override
-    public Void visit(ExprStmtNode n) {
-        n.getExpr().accept(this);
-        return null;
-    }
-
-    @Override
-    public Void visit(IfNode n) {
-        IntegerValue elseLbl = IntegerValue.of(0);
-        IntegerValue fiLbl = IntegerValue.of(0);
-        
-        n.getCond().accept(this);
-        codes.add(new Code(Instruction.JZ, elseLbl));
-        n.getThenBody().accept(this);
-        
-        if (n.getElseBody() == null) {
-            codes.add(new Code(Instruction.LABEL, elseLbl));
-            elseLbl.setVal(codes.size() - 1);
-        } else {
-            codes.add(new Code(Instruction.JMP, fiLbl));
-            codes.add(new Code(Instruction.LABEL, elseLbl));
-            elseLbl.setVal(codes.size() - 1);
-            n.getElseBody().accept(this);
-            codes.add(new Code(Instruction.LABEL, fiLbl));
-            fiLbl.setVal(codes.size() - 1);
-        }
-        return null;
-    }
-
-    @Override
-    public Void visit(WhileNode n) {
-        IntegerValue entLbl = IntegerValue.of(0);
-        IntegerValue exitLbl = IntegerValue.of(0);
-        
-        codes.add(new Code(Instruction.LABEL, entLbl));
-        entLbl.setVal(codes.size() - 1);
-        n.getCond().accept(this);
-        codes.add(new Code(Instruction.JZ, exitLbl));
-        
-        fScope.pushContinue(entLbl);
-        fScope.pushBreak(exitLbl);
-        n.getBody().accept(this);
-        fScope.popBreak();
-        fScope.popContinue();
-        
-        codes.add(new Code(Instruction.JMP, entLbl));
-        codes.add(new Code(Instruction.LABEL, exitLbl));
-        exitLbl.setVal(codes.size() - 1);
-        return null;
-    }
-
-    @Override
-    public Void visit(BreakNode n) {
-        codes.add(new Code(Instruction.JMP, fScope.getBreakPoint()));
-        return null;
-    }
-
-    @Override
-    public Void visit(ContinueNode n) {
-        codes.add(new Code(Instruction.JMP, fScope.getContinuePoint()));
-        return null;
-    }
-
-    @Override
-    public Void visit(PrintfNode n) {
-        n.getFmtStr().accept(this);
-        for (ListIterator<ExprNode> it = n.getArgs().listIterator(n.getArgs().size());
-                it.hasPrevious();) {
-            it.previous().accept(this);
-        }
-        codes.add(new Code(Instruction.PRINTF, IntegerValue.of(n.getArgs().size())));
         return null;
     }
 
     @Override
     public Void visit(StrLiteralNode n) {
-        cTbl.add(n.getVal());
-        PointerValue<Character> p = new PointerValue<>(0, StrUtils.strToCharacterArray(n.getVal()));
-        codes.add(new Code(Instruction.PUSHP, p));
+        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public Void visit(AddressNode n) {
+        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public Void visit(DereferNode n) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Void visit(VarDefNode n) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Void visit(VarLetNode n) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Void visit(VarInitNode n) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Void visit(ExprStmtNode n) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Void visit(IfNode n) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Void visit(WhileNode n) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Void visit(BreakNode n) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Void visit(ContinueNode n) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Void visit(PrintfNode n) {
+        // TODO Auto-generated method stub
         return null;
     }
 

@@ -7,14 +7,13 @@ import java.util.Map;
 import java.util.Optional;
 
 import jcc.type.Type;
-import jcc.value.IntegerValue;
 import lombok.Getter;
 
 @Getter
 public class FunctionScope {
     private final LinkedList<Map<String, LvarDefinition>> scopeStack = new LinkedList<>();
-    private final LinkedList<IntegerValue> breakStack = new LinkedList<>();
-    private final LinkedList<IntegerValue> continueStack = new LinkedList<>();
+    private final LinkedList<MutableNum> breakStack = new LinkedList<>();
+    private final LinkedList<MutableNum> continueStack = new LinkedList<>();
 
     private int argIdx = 0;
     private int lvarIdx = 0;
@@ -68,27 +67,27 @@ public class FunctionScope {
         return Optional.empty();
     }
 
-    public void pushBreak(IntegerValue exitAddr) {
+    public void pushBreak(MutableNum exitAddr) {
         breakStack.add(exitAddr);
     }
 
     public void popBreak() {
         breakStack.removeLast();
     }
-    
-    public IntegerValue getBreakPoint() {
+
+    public MutableNum getBreakPoint() {
         return breakStack.getLast();
     }
 
-    public void pushContinue(IntegerValue entAddr) {
+    public void pushContinue(MutableNum entAddr) {
         continueStack.add(entAddr);
     }
 
     public void popContinue() {
         continueStack.removeLast();
     }
-    
-    public IntegerValue getContinuePoint() {
+
+    public MutableNum getContinuePoint() {
         return continueStack.getLast();
     }
 }

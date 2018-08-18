@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor(staticName = "of")
-public class MutableLong {
+public class MutableNum {
     private long val;
     
     public int asInt() {
