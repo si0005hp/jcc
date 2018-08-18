@@ -131,8 +131,23 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     }
 
     @Override
+    public Void visit(VarDefNode n) {
+        fScope.addLvar(n.getType(), n.getVname());
+        return null;
+    }
+    
+    @Override
+    public Void visit(VarLetNode n) {
+        n.getExpr().accept(this);
+        int vIdx = fScope.getVar(n.getVar().getVname()).getIdx();  
+        asm.gent("mov %%eax, %s(%%rbp)", -4 * vIdx);
+        return null;
+    }
+    
+    @Override
     public Void visit(VarRefNode n) {
-        // TODO Auto-generated method stub
+        int vIdx = fScope.getVar(n.getVname()).getIdx();
+        asm.gent("mov %s(%%rbp), %%eax", -4 * vIdx);
         return null;
     }
 
@@ -155,18 +170,6 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
 
     @Override
     public Void visit(DereferNode n) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Void visit(VarDefNode n) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Void visit(VarLetNode n) {
         // TODO Auto-generated method stub
         return null;
     }

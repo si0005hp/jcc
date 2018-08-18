@@ -25,24 +25,25 @@ FAILS_LIST="fails.list"
  	    	continue
   		fi
 
-		if [[ "$IS_COMPILE_ONLY" != "f" ]]; then
-			./$elfName
-			res="$?"
+		if [[ "$IS_COMPILE_ONLY" == "f" ]]; then
+			./$elfName; res="$?"
 			if [ "$res" != "$answer" ]; then
-    			echo "Test failed: ${asmName}	${answer} expected but got ${res}"
-    			echo "${asmName}	t" >> "$FAILS_LIST"
+				echo "Test failed: ${asmName}	${answer} expected but got ${res}"
+				echo "${asmName}	t" >> "$FAILS_LIST"
   			fi
 		fi
 	done
 
 	if [ -f "$FAILS_LIST" ]; then
+		n=$(wc -l "$FAILS_LIST" | awk '{print $1}')
 		echo "-------------------"
-		echo "[Failed tests]"
+		echo "[${n} tests failed]"
 		while read e; do echo "$e"; done < "$FAILS_LIST" 
 		echo "-------------------"
 	else
-		echo "------------------"
-		echo "[All tests passed]"
-		echo "------------------"
+		n=$(wc -l "$TEST_LIST" | awk '{print $1}')
+		echo "-----------------------"
+		echo "[All ${n} tests passed]"
+		echo "-----------------------"
 	fi
 )
