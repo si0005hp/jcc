@@ -5,11 +5,13 @@ TEST_DIR=${1:-test}
 IS_COMPILE_ONLY=${2:-f}
 
 TEST_LIST="test.list"
+FAILS_LIST="fails.list"
+
 
 (
-	errors=()
+	cd $TEST_DIR || exit 1
+	rm -f "$FAILS_LIST"
 
-	cd $TEST_DIR
 	cat "$TEST_LIST" | while IFS="	" read f answer
 	do
 		asmName=$(echo "$f" | sed -e 's/\.c/\.s/g')
@@ -19,29 +21,28 @@ TEST_LIST="test.list"
 		gcc -o "$elfName" "$asmName"
 		if [ $? -ne 0 ]; then
 	    	echo "Compile failed: ${asmName}"
-	    	errors+=( "$asmName" )
-	    	continue
+	    	echo "${asmName}	c" >> "$FAILS_LIST"
+ 	    	continue
   		fi
-
 
 		if [[ "$IS_COMPILE_ONLY" != "f" ]]; then
 			./$elfName
 			res="$?"
 			if [ "$res" != "$answer" ]; then
     			echo "Test failed: ${asmName}	${answer} expected but got ${res}"
-    			errors+=( "$asmName" )
+    			echo "${asmName}	t" >> "$FAILS_LIST"
   			fi
 		fi
 	done
 
-	if [[ ${#errors[@]} -ne 0 ]]; then
-		echo "-----------------"
-		echo "Failed tests -> "
-		for e in ${errors[@]}; do echo ${e}; done
-		echo "-----------------"
+	if [ -f "$FAILS_LIST" ]; then
+		echo "-------------------"
+		echo "[Failed tests]"
+		while read e; do echo "$e"; done < "$FAILS_LIST" 
+		echo "-------------------"
 	else
-		echo "-----------------"
-		echo "All tests passed."
-		echo "-----------------"
+		echo "------------------"
+		echo "[All tests passed]"
+		echo "------------------"
 	fi
 )

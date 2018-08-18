@@ -1,5 +1,6 @@
 package jcc;
 
+import static jcc.JccParser.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -106,7 +107,26 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
 
     @Override
     public Void visit(BinOpNode n) {
-        // TODO Auto-generated method stub
+        String op = null;
+        switch (n.getOpType()) {
+        case ADD: op = "add"; break;
+        case SUB: op = "sub"; break;
+        case MUL: op = "imul"; break;
+        case DIV: break;
+        default:
+            throw new IllegalArgumentException(String.valueOf(n.getOpType()));
+        }
+        n.getRight().accept(this);
+        asm.gent("push %%rax");
+        n.getLeft().accept(this);
+        if (n.getOpType() == DIV) {
+            asm.gent("pop %%rcx");
+            asm.gent("mov $0, %%edx");
+            asm.gent("idiv %%rcx");
+        } else {
+            asm.gent("pop %%rcx");
+            asm.gent("%s %%rcx, %%rax", op);
+        }
         return null;
     }
 

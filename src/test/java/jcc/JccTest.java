@@ -86,7 +86,7 @@ public class JccTest {
         if (!cFileName.endsWith(".c")) {
             throw new RuntimeException("Illegal cFileName: " + cFileName);
         }
-        return cFileName.replaceFirst(".c", ".s");
+        return cFileName.replaceFirst("\\.c", ".s");
     }
 
     private void expectedToFail(Runnable r) {
