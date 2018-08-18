@@ -5,7 +5,6 @@ import static jcc.JccParser.DIV;
 import static jcc.JccParser.MUL;
 import static jcc.JccParser.SUB;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -54,30 +53,22 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     @Override
     public Void visit(FuncDefNode n) {
         fScope = new FunctionScope();
-        
+        // Register params to scope
+        n.getParams().forEach(p -> fScope.addArg(p.getType(), p.getPname()));
+
         /* prologue */
         asm.gen(".global %s", n.getFname());
         asm.gen("%s:", n.getFname());
         asm.gent("push %%rbp");
         asm.gent("mov %%rsp, %%rbp");
-        // params
-        MutableNum bOffset = MutableNum.of(0);
-        List<MutableNum> bpIdxs = new ArrayList<>();
-        for (int i = 0; i < n.getParams().size(); i++) {
-            bpIdxs.add(MutableNum.of(0));
-            asm.gent("mov %%%s %s(%%rbp)", ARG_REGS.get(i), bpIdxs.get(i));
-        }
+
         // Expand sp based on local vas
         MutableNum spWid = MutableNum.of(0);
         asm.gent("sub $%s, %%rsp", spWid);
         
         /* funcBody */
         n.getBlock().accept(this);
-        // fix bpIdxs
-        bOffset.setVal(-16 * fScope.getLvarIdx());
-        for (int i = 0; i < bpIdxs.size(); i++) {
-            bpIdxs.get(i).setVal(-4 * (i + 1) + bOffset.getVal());
-        }
+        
         // fix spWid
         spWid.setVal(4 * fScope.getLvarIdx());
         
@@ -148,15 +139,25 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     @Override
     public Void visit(VarLetNode n) {
         n.getExpr().accept(this);
-        int vIdx = fScope.getVar(n.getVar().getVname()).getIdx();  
-        asm.gent("mov %%eax, %s(%%rbp)", -4 * vIdx);
+        LvarDefinition var = fScope.getVar(n.getVar().getVname());
+        if (var.isArg()) {
+            asm.gent("mov %%rax, %%%s", ARG_REGS.get(var.getIdx() - 1));
+        } else {
+            int vIdx = fScope.getVar(n.getVar().getVname()).getIdx() - fScope.getArgIdx();  
+            asm.gent("mov %%eax, %s(%%rbp)", -4 * vIdx);
+        }
         return null;
     }
     
     @Override
     public Void visit(VarRefNode n) {
-        int vIdx = fScope.getVar(n.getVname()).getIdx();
-        asm.gent("mov %s(%%rbp), %%eax", -4 * vIdx);
+        LvarDefinition var = fScope.getVar(n.getVname());
+        if (var.isArg()) {
+            asm.gent("mov %%%s, %%rax", ARG_REGS.get(var.getIdx() - 1));
+        } else {
+            int vIdx = fScope.getVar(n.getVname()).getIdx() - fScope.getArgIdx();
+            asm.gent("mov %s(%%rbp), %%eax", -4 * vIdx);
+        }
         return null;
     }
 
@@ -170,6 +171,17 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     
     @Override
     public Void visit(FuncCallNode n) {
+        // process args
+        for (int i = 0; i < n.getArgs().size(); i++) {
+            n.getArgs().get(i).accept(this);
+            asm.gent("push %%rax");
+        }
+        for (int i = n.getArgs().size() - 1; i >= 0; i--) {
+            asm.gent("pop %%%s", ARG_REGS.get(i));
+        }
+        // call func
+        asm.gent("mov $0, %%eax");
+        asm.gent("call %s", n.getFname());
         return null;
     }
 
