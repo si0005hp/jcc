@@ -20,13 +20,25 @@ import java.util.stream.Stream;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import lombok.Value;
+
 public class JccTest {
 
-    private static final List<String> testList = new ArrayList<>();
-    private static final String pattern = ".*";
+    private static final List<TestF> tests = new ArrayList<>();
+    private static final String PTN = ".*";
+    
+    private static final String TEST_LIST = "test.list";
+    private static final String TEST_OUT_DIR = ".test";
+    
+    @Value
+    static class TestF {
+        String name;
+        String answer;
+    }
     
     @BeforeClass
     public static void setup() throws IOException, URISyntaxException {
@@ -34,31 +46,35 @@ public class JccTest {
         FileUtils.deleteQuietly(outputDir);
         FileUtils.forceMkdir(outputDir);
         
-        File testListFile = new File(JccTest.class.getResource("test.list").toURI());
-        readTestList(testListFile, testList);
+        File testListFile = new File(JccTest.class.getResource(TEST_LIST).toURI());
+        readTestList(testListFile, tests);
         FileUtils.copyFileToDirectory(testListFile, outputDir);
     }
     
     @Test
     public void run() {
-        List<String> targetTests = testList.stream().filter(testFilter(pattern)).collect(Collectors.toList());
-        for (String f : targetTests) {
-            runF(f);
+        List<TestF> targetTests = tests.stream().filter(testFilter(PTN)).collect(Collectors.toList());
+        for (TestF f : targetTests) {
+            if ("@Fail".equals(f.getAnswer())) {
+                expectedToFail(() -> runF(f.getName())); 
+            } else {
+                runF(f.getName());
+            }
         }
-        System.out.println(String.format("Processed %s files with pattern '%s'.", targetTests.size(), pattern));
+        System.out.println(String.format("Processed %s files with pattern '%s'.", targetTests.size(), PTN));
     }
     
-    private Predicate<String> testFilter(String pattern) {
-        return s -> Pattern.matches(pattern, s);
+    private Predicate<TestF> testFilter(String pattern) {
+        return t -> Pattern.matches(pattern, t.getName());
     }
     
-    private static void readTestList(File f, List<String> testList) {
+    private static void readTestList(File f, List<TestF> testList) {
         try (InputStream is = new FileInputStream(f);
                 InputStreamReader isr = new InputStreamReader(is);
                 BufferedReader br = new BufferedReader(isr);) {
             String line = null;
-            while ((line = br.readLine()) != null) {
-                testList.add(line.split("\t")[0]);
+            while (StringUtils.isNotEmpty((line = br.readLine()))) {
+                testList.add(new TestF(line.split("\t")[0], line.split("\t")[1]));
             }
         } catch (IOException e) {
             throw new RuntimeException("Failed to load file: " + f.getName());
@@ -66,7 +82,7 @@ public class JccTest {
     }
 
     private static String getOutputDirPath() {
-        return System.getProperty("user.dir") + File.separator + "test"; 
+        return System.getProperty("user.dir") + File.separator + TEST_OUT_DIR; 
     }
     
     private static String getOutputFilePath(String fname) {

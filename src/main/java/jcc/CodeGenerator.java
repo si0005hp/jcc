@@ -1,6 +1,10 @@
 package jcc;
 
-import static jcc.JccParser.*;
+import static jcc.JccParser.ADD;
+import static jcc.JccParser.DIV;
+import static jcc.JccParser.MUL;
+import static jcc.JccParser.SUB;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -63,14 +67,19 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
             bpIdxs.add(MutableNum.of(0));
             asm.gent("mov %%%s %s(%%rbp)", ARG_REGS.get(i), bpIdxs.get(i));
         }
+        // Expand sp based on local vas
+        MutableNum spWid = MutableNum.of(0);
+        asm.gent("sub $%s, %%rsp", spWid);
         
         /* funcBody */
         n.getBlock().accept(this);
         // fix bpIdxs
-        bOffset.setVal(fScope.getLvarIdx() * -16);
+        bOffset.setVal(-16 * fScope.getLvarIdx());
         for (int i = 0; i < bpIdxs.size(); i++) {
             bpIdxs.get(i).setVal(-4 * (i + 1) + bOffset.getVal());
         }
+        // fix spWid
+        spWid.setVal(4 * fScope.getLvarIdx());
         
         /* epilogue */
         if (n.getRetvalType() instanceof VoidType) {
@@ -152,6 +161,14 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     }
 
     @Override
+    public Void visit(VarInitNode n) {
+        LvarDefinition var = fScope.addLvar(n.getLvar().getType(), n.getLvar().getVname());
+        n.getExpr().accept(this);
+        asm.gent("mov %%eax, %s(%%rbp)", -4 * var.getIdx());
+        return null;
+    }
+    
+    @Override
     public Void visit(FuncCallNode n) {
         return null;
     }
@@ -170,12 +187,6 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
 
     @Override
     public Void visit(DereferNode n) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Void visit(VarInitNode n) {
         // TODO Auto-generated method stub
         return null;
     }

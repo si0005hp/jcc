@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-TEST_DIR=${1:-test}
+TEST_DIR=${1:-.test}
 IS_COMPILE_ONLY=${2:-f}
 
 TEST_LIST="test.list"
@@ -12,7 +12,7 @@ FAILS_LIST="fails.list"
 	cd $TEST_DIR || exit 1
 	rm -f "$FAILS_LIST"
 
-	cat "$TEST_LIST" | while IFS="	" read f answer
+	cat "$TEST_LIST" | grep -v "@Fail$" | while IFS="	" read f answer
 	do
 		asmName=$(echo "$f" | sed -e 's/\.c/\.s/g')
 		elfName=$(echo "$f" | sed -e 's/\.c//g')
