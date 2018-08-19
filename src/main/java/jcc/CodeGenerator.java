@@ -5,6 +5,7 @@ import static jcc.JccParser.DIV;
 import static jcc.JccParser.MUL;
 import static jcc.JccParser.SUB;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -40,12 +41,29 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     
     private final Asm asm = new Asm();
     private final Map<String, FuncDefinition> funcDefs = new HashMap<>();
-    private final ConstTable cTbl = new ConstTable();
+    private final ConstantTable constTbl = new ConstantTable();
 
     public void generate(ProgramNode n) {
+        preProcess(n);
+        // generate data section
+        if (constTbl.getStrLblIdx() > 0) {
+            asm.gen(".data");
+            constTbl.getStrLiterals().forEach((s, lbl) -> {
+                asm.gen("%s:", lbl);
+                asm.gent(".string \"%s\"", s);
+            });
+        }
+        // generate text section
         if (!n.getFuncDefs().isEmpty()) {
             asm.gen(".text");
             n.getFuncDefs().forEach(f -> f.accept(this));
+        }
+    }
+    
+    private void preProcess(ProgramNode n) {
+        for (StrLiteralNode sn : n.getStrs()) {
+            String lbl = constTbl.registerStrLiteral(sn.getVal());
+            sn.setLbl(lbl);
         }
     }
     
@@ -202,7 +220,7 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     
     @Override
     public Void visit(StrLiteralNode n) {
-        // TODO Auto-generated method stub
+        asm.gent("lea %s(%%rip), %%rax", n.getLbl());
         return null;
     }
 

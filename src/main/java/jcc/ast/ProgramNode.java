@@ -10,5 +10,6 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = false)
 @AllArgsConstructor
 public class ProgramNode extends Node {
+    private List<StrLiteralNode> strs;
     private List<FuncDefNode> funcDefs;
 }

@@ -6,11 +6,15 @@ import jcc.type.*;
 }
 
 @parser::members {
+	private final List<StrLiteralNode> strs = new ArrayList<>();
 }
 
 program returns [ProgramNode n]
 @init { List<FuncDefNode> funcDefs = new ArrayList<>(); }
-	: ( funcDef { funcDefs.add($funcDef.n); } )* { $n = new ProgramNode(funcDefs); }
+	: ( funcDef { funcDefs.add($funcDef.n); } )* 
+	  {
+	   $n = new ProgramNode(strs, funcDefs);
+	  }
 	;
 
 funcDef returns [FuncDefNode n]
@@ -113,7 +117,12 @@ expr returns [ExprNode n]
 	| l=expr op=('=='|'!='|'>'|'<'|'>='|'<=') r=expr  { $n = new BinOpNode($op.type, $l.n, $r.n); }
 	| INTLIT                                          { $n = new IntLiteralNode(CType.INT, $INTLIT.int); }
 	| CHARLIT                                         { $n = new IntLiteralNode(CType.CHAR, StrUtils.characterCode($CHARLIT.text)); }
-	| STRLIT                                          { $n = new StrLiteralNode(StrUtils.stringValue($STRLIT.text)); }
+	| STRLIT                                          
+	  { 
+	  	StrLiteralNode s = new StrLiteralNode(StrUtils.stringValue($STRLIT.text));
+	  	strs.add(s);
+	  	$n = s;
+	  }
 	| IDT LPAREN exprList? RPAREN                     { $n = new FuncCallNode($IDT.text, $exprList.ctx == null ? new ArrayList<>() : $exprList.ns); }
 	| var                                             { $n = $var.n; }
 	| LPAREN expr RPAREN                              { $n = $expr.n; }
