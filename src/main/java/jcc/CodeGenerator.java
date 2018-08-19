@@ -101,7 +101,16 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     
     @Override
     public Void visit(IntLiteralNode n) {
-        asm.gent("mov $%d, %%eax", n.getVal());
+        switch (n.getCType()) {
+        case INT:
+            asm.gent("mov $%d, %%eax", n.getVal());
+            break;
+        case CHAR:
+            asm.gent("mov $%d, %%rax", n.getVal());
+            break;
+        default:
+            throw new IllegalArgumentException(n.getCType().name());
+        }
         return null;
     }
 
