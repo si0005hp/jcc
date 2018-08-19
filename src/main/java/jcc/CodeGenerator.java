@@ -6,9 +6,7 @@ import static jcc.JccParser.MUL;
 import static jcc.JccParser.SUB;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import jcc.ast.AddressNode;
 import jcc.ast.BinOpNode;
@@ -39,7 +37,6 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     private static final List<String> ARG_REGS = Arrays.asList("rdi", "rsi", "rdx", "rcx", "r8", "r9");
     
     private final Asm asm = new Asm();
-    private final Map<String, FuncDefinition> funcDefs = new HashMap<>();
     private final ConstantTable constTbl = new ConstantTable();
 
     public void generate(ProgramNode n) {
