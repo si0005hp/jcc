@@ -12,7 +12,7 @@ FAILS_LIST="fails.list"
 	cd $TEST_DIR || exit 1
 	rm -f "$FAILS_LIST"
 
-	cat "$TEST_LIST" | grep -v "@Fail$" | while IFS="	" read f answer
+	cat "$TEST_LIST" | grep -v "@Fail$" | while IFS="	" read f type answer
 	do
 		asmName=$(echo "$f" | sed -e 's/\.c/\.s/g')
 		elfName=$(echo "$f" | sed -e 's/\.c//g')
@@ -26,7 +26,11 @@ FAILS_LIST="fails.list"
   		fi
 
 		if [[ "$IS_COMPILE_ONLY" == "f" ]]; then
-			./$elfName; res="$?"
+			if [[ "$type" == "e" ]]; then
+				./$elfName; res="$?"
+			else 
+				res=$(./$elfName)
+			fi
 			if [ "$res" != "$answer" ]; then
 				echo "Test failed: ${asmName}	${answer} expected but got ${res}"
 				echo "${asmName}	t" >> "$FAILS_LIST"

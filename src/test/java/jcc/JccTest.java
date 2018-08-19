@@ -37,6 +37,7 @@ public class JccTest {
     @Value
     static class TestF {
         String name;
+        String type;
         String answer;
     }
     
@@ -55,10 +56,14 @@ public class JccTest {
     public void run() {
         List<TestF> targetTests = tests.stream().filter(testFilter(PTN)).collect(Collectors.toList());
         for (TestF f : targetTests) {
-            if ("@Fail".equals(f.getAnswer())) {
-                expectedToFail(() -> runF(f.getName())); 
-            } else {
-                runF(f.getName());
+            try {
+                if ("@Fail".equals(f.getAnswer())) {
+                    expectedToFail(() -> runF(f.getName())); 
+                } else {
+                    runF(f.getName());
+                }
+            } catch (Exception e) {
+                throw new RuntimeException("Failed in test: " + f.getName(), e);
             }
         }
         System.out.println(String.format("Processed %s files with pattern '%s'.", targetTests.size(), PTN));
@@ -74,7 +79,8 @@ public class JccTest {
                 BufferedReader br = new BufferedReader(isr);) {
             String line = null;
             while (StringUtils.isNotEmpty((line = br.readLine()))) {
-                testList.add(new TestF(line.split("\t")[0], line.split("\t")[1]));
+                String[] s = line.split("\t");
+                testList.add(new TestF(s[0], s[1], s[2]));
             }
         } catch (IOException e) {
             throw new RuntimeException("Failed to load file: " + f.getName());

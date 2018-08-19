@@ -1,17 +1,19 @@
-base1.c	0
-base2.c	9
-arithmetic1.c	18
-arithmetic2.c	16
-var1.c	9
-var2.c	21
-var3.c	30
-var4.c	80
-var5.c	@Fail
-var6.c	0
-func1.c	9
-func2.c	11
-func3.c	9
-func4.c	8
-func5.c	20
-func6.c	@Fail
-char1.c	97
+base1.c	e	0
+base2.c	e	9
+arithmetic1.c	e	18
+arithmetic2.c	e	16
+var1.c	e	9
+var2.c	e	21
+var3.c	e	30
+var4.c	e	80
+var5.c	e	@Fail
+var6.c	e	0
+func1.c	e	9
+func2.c	e	11
+func3.c	e	9
+func4.c	e	8
+func5.c	e	20
+func6.c	e	@Fail
+char1.c	e	97
+str1.c	s	a
+str2.c	s	abc
