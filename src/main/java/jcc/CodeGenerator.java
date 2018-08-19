@@ -239,7 +239,7 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     public Void visit(AddressNode n) {
         LvarDefinition var = fScope.getVar(n.getVar().getVname());
         if (var.isArg()) {
-            // TODO
+            asm.gent("lea %%%s, %%rax", ARG_REGS.get(var.getIdx() - 1));
         } else {
             asm.gent("lea %s(%%rbp), %%rax", var.getIdx());
         }

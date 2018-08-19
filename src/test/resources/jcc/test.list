@@ -19,3 +19,6 @@ str1.c	s	a
 str2.c	s	abc
 str3.c	s	9a
 pointer1.c	e	5
+pointer2.c	e	97
+pointer3.c	e	12
+pointer4.c	e	98
