@@ -15,5 +15,7 @@ func4.c	e	8
 func5.c	e	20
 func6.c	e	@Fail
 char1.c	e	97
+char2.c	e	98
 str1.c	s	a
 str2.c	s	abc
+str3.c	s	9a

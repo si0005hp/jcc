@@ -5,7 +5,6 @@ import static jcc.JccParser.DIV;
 import static jcc.JccParser.MUL;
 import static jcc.JccParser.SUB;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
