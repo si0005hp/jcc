@@ -10,4 +10,9 @@ import lombok.EqualsAndHashCode;
 @AllArgsConstructor(staticName = "of")
 public class PointerType extends Type {
     private CType baseType;
+
+    @Override
+    public int getSize() {
+        return 8;
+    }
 }

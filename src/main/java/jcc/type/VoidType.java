@@ -8,4 +8,8 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = false)
 @AllArgsConstructor(staticName = "of")
 public class VoidType extends Type {
+    @Override
+    public int getSize() {
+        throw new UnsupportedOperationException();
+    }
 }
