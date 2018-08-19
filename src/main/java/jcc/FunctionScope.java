@@ -6,6 +6,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Optional;
 
+import jcc.ast.FuncDefNode;
 import jcc.type.Type;
 import lombok.Getter;
 
@@ -18,8 +19,9 @@ public class FunctionScope {
     private int argIdx = 0;
     private int lvarIdx = 0;
 
-    public FunctionScope() {
-        scopeStack.add(new HashMap<>()); // This initial map is the layer of func args
+    public FunctionScope(FuncDefNode n) {
+        pushScope(); // This initial scope is the layer of func args
+        n.getParams().forEach(p -> addArg(p.getType(), p.getPname())); // Register params to scope
     }
 
     /**

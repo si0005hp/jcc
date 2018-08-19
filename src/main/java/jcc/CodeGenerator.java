@@ -79,9 +79,7 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     FunctionScope fScope;
     @Override
     public Void visit(FuncDefNode n) {
-        fScope = new FunctionScope();
-        // Register params to scope
-        n.getParams().forEach(p -> fScope.addArg(p.getType(), p.getPname()));
+        fScope = new FunctionScope(n);
 
         /* prologue */
         asm.gen(".global %s", n.getFname());
