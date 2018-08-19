@@ -30,7 +30,7 @@ stmt returns [StmtNode n]
 	| whileStmt     { $n = $whileStmt.n; }
 	| breakStmt     { $n = $breakStmt.n; }
 	| continueStmt  { $n = $continueStmt.n; }
-	| printfStmt    { $n = $printfStmt.n; }
+	// | printfStmt    { $n = $printfStmt.n; }
 	| block         { $n = $block.n; }
 	;
 
@@ -75,6 +75,7 @@ continueStmt returns [ContinueNode n]
 	;
 
 // Temporal node to compile 'printf' in Jcc
+/*
 printfStmt returns [PrintfNode n]
 @init { List<ExprNode> args = new ArrayList<>(); }
 	: 'printf' LPAREN fmtStr=expr ( ',' expr { args.add($expr.n); } )* RPAREN SEMICOLON
@@ -82,6 +83,7 @@ printfStmt returns [PrintfNode n]
 	  	$n = new PrintfNode($fmtStr.n, args);
 	  }
 	;
+*/
 
 block returns [BlockNode n]
 @init { List<StmtNode> stmts = new ArrayList<>(); }

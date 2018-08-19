@@ -186,6 +186,12 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     }
 
     @Override
+    public Void visit(ExprStmtNode n) {
+        n.getExpr().accept(this);
+        return null;
+    }
+    
+    @Override
     public Void visit(StrLiteralNode n) {
         // TODO Auto-generated method stub
         return null;
@@ -199,12 +205,6 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
 
     @Override
     public Void visit(DereferNode n) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Void visit(ExprStmtNode n) {
         // TODO Auto-generated method stub
         return null;
     }
