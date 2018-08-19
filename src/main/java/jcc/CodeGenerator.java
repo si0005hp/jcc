@@ -174,7 +174,8 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         if (var.isArg()) {
             asm.gent("mov %%rax, %%%s", ARG_REGS.get(var.getIdx() - 1));
         } else {
-            asm.gent("mov %%eax, %s(%%rbp)", var.getIdx());
+            String ax = axBySize(var.getType().getSize());
+            asm.gent("mov %%%s, %s(%%rbp)", ax, var.getIdx());
         }
         return null;
     }
