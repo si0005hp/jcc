@@ -65,6 +65,16 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         }
     }
     
+    private String axBySize(int size) {
+        switch (size) {
+        case 1: return "al";
+        case 4: return "eax";
+        case 8: return "rax";
+        default:
+            throw new IllegalArgumentException(String.valueOf(size));
+        }
+    }
+    
     FunctionScope fScope;
     @Override
     public Void visit(FuncDefNode n) {
@@ -175,7 +185,11 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         if (var.isArg()) {
             asm.gent("mov %%%s, %%rax", ARG_REGS.get(var.getIdx() - 1));
         } else {
-            asm.gent("mov %s(%%rbp), %%rax", var.getIdx());
+            String ax = axBySize(var.getType().getSize());
+            if (ax.equals("al")) {
+                asm.gent("mov $0, %%eax", var.getIdx(), ax);
+            }
+            asm.gent("mov %s(%%rbp), %%%s", var.getIdx(), ax);
         }
         return null;
     }
