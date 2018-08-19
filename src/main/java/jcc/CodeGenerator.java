@@ -87,7 +87,7 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         n.getBlock().accept(this);
         
         // fix spWid
-        spWid.setVal(4 * fScope.getLvarIdx());
+        spWid.setVal(8 * fScope.getLvarIdx());
         
         /* epilogue */
         if (n.getRetvalType() instanceof VoidType) {
@@ -170,7 +170,7 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
             asm.gent("mov %%rax, %%%s", ARG_REGS.get(var.getIdx() - 1));
         } else {
             int vIdx = var.getIdx() - fScope.getArgIdx();  
-            asm.gent("mov %%eax, %s(%%rbp)", -4 * vIdx);
+            asm.gent("mov %%eax, %s(%%rbp)", -8 * vIdx);
         }
         return null;
     }
@@ -182,7 +182,7 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
             asm.gent("mov %%%s, %%rax", ARG_REGS.get(var.getIdx() - 1));
         } else {
             int vIdx = var.getIdx() - fScope.getArgIdx();
-            asm.gent("mov %s(%%rbp), %%eax", -4 * vIdx);
+            asm.gent("mov %s(%%rbp), %%rax", -8 * vIdx);
         }
         return null;
     }
@@ -191,7 +191,7 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     public Void visit(VarInitNode n) {
         LvarDefinition var = fScope.addLvar(n.getLvar().getType(), n.getLvar().getVname());
         n.getExpr().accept(this);
-        asm.gent("mov %%eax, %s(%%rbp)", -4 * var.getIdx());
+        asm.gent("mov %%rax, %s(%%rbp)", -8 * var.getIdx());
         return null;
     }
     
@@ -225,13 +225,20 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
 
     @Override
     public Void visit(AddressNode n) {
-        // TODO Auto-generated method stub
+        LvarDefinition var = fScope.getVar(n.getVar().getVname());
+        if (var.isArg()) {
+            // TODO
+        } else {
+            int vIdx = var.getIdx() - fScope.getArgIdx();
+            asm.gent("lea %s(%%rbp), %%rax", -8 * vIdx);
+        }
         return null;
     }
 
     @Override
     public Void visit(DereferNode n) {
-        // TODO Auto-generated method stub
+        n.getVar().accept(this);
+        asm.gent("mov (%%rax), %%rax");
         return null;
     }
 
