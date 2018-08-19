@@ -169,7 +169,7 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         if (var.isArg()) {
             asm.gent("mov %%rax, %%%s", ARG_REGS.get(var.getIdx() - 1));
         } else {
-            int vIdx = fScope.getVar(n.getVar().getVname()).getIdx() - fScope.getArgIdx();  
+            int vIdx = var.getIdx() - fScope.getArgIdx();  
             asm.gent("mov %%eax, %s(%%rbp)", -4 * vIdx);
         }
         return null;
@@ -181,7 +181,7 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         if (var.isArg()) {
             asm.gent("mov %%%s, %%rax", ARG_REGS.get(var.getIdx() - 1));
         } else {
-            int vIdx = fScope.getVar(n.getVname()).getIdx() - fScope.getArgIdx();
+            int vIdx = var.getIdx() - fScope.getArgIdx();
             asm.gent("mov %s(%%rbp), %%eax", -4 * vIdx);
         }
         return null;
