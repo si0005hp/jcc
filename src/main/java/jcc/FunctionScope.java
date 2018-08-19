@@ -41,7 +41,7 @@ public class FunctionScope {
     }
 
     public LvarDefinition addLvar(Type type, String vname) {
-        return addVar(new LvarDefinition(type, vname, false, ++lvarIdx));
+        return addVar(new LvarDefinition(type, vname, false, ++lvarIdx * -8));
     }
 
     private LvarDefinition addVar(LvarDefinition ld) {
