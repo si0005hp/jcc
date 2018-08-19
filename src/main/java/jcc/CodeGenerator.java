@@ -19,7 +19,6 @@ import jcc.ast.FuncCallNode;
 import jcc.ast.FuncDefNode;
 import jcc.ast.IfNode;
 import jcc.ast.IntLiteralNode;
-import jcc.ast.PrintfNode;
 import jcc.ast.ProgramNode;
 import jcc.ast.ReturnNode;
 import jcc.ast.StrLiteralNode;
@@ -37,11 +36,19 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     private static final List<String> ARG_REGS = Arrays.asList("rdi", "rsi", "rdx", "rcx", "r8", "r9");
     
     private final Asm asm = new Asm();
-    private final ConstantTable constTbl = new ConstantTable();
+    private final ConstantTable constTbl;
 
-    public void generate(ProgramNode n) {
-        preProcess(n);
-        // generate data section
+    public CodeGenerator(NodePreprocessor pp) {
+        this.constTbl = pp.getConstTbl();
+    }
+    
+    @Override
+    public void visit(ProgramNode n) {
+        genDataSection();
+        genTextSection(n);
+    }
+    
+    private void genDataSection() {
         if (constTbl.getStrLblIdx() > 0) {
             asm.gen(".data");
             constTbl.getStrLiterals().forEach((s, lbl) -> {
@@ -49,17 +56,12 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
                 asm.gent(".string \"%s\"", s);
             });
         }
-        // generate text section
+    }
+    
+    private void genTextSection(ProgramNode n) {
         if (!n.getFuncDefs().isEmpty()) {
             asm.gen(".text");
             n.getFuncDefs().forEach(f -> f.accept(this));
-        }
-    }
-    
-    private void preProcess(ProgramNode n) {
-        for (StrLiteralNode sn : n.getStrs()) {
-            String lbl = constTbl.registerStrLiteral(sn.getVal());
-            sn.setLbl(lbl);
         }
     }
     
@@ -75,16 +77,10 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         asm.gen("%s:", n.getFname());
         asm.gent("push %%rbp");
         asm.gent("mov %%rsp, %%rbp");
-
-        // Expand sp based on local vas
-        MutableNum spWid = MutableNum.of(0);
-        asm.gent("sub $%s, %%rsp", spWid);
+        asm.gent("sub $%s, %%rsp", 8 * n.getLvarCnt());
         
         /* funcBody */
         n.getBlock().accept(this);
-        
-        // fix spWid
-        spWid.setVal(8 * fScope.getLvarIdx());
         
         /* epilogue */
         if (n.getRetvalType() instanceof VoidType) {
@@ -107,7 +103,9 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     
     @Override
     public Void visit(ReturnNode n) {
-        n.getExpr().accept(this);
+        if (n.getExpr() != null) {
+            n.getExpr().accept(this);            
+        }
         asm.gent("leave");
         asm.gent("ret");
         return null;
@@ -259,12 +257,6 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
 
     @Override
     public Void visit(ContinueNode n) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Void visit(PrintfNode n) {
         // TODO Auto-generated method stub
         return null;
     }

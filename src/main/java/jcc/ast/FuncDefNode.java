@@ -7,11 +7,13 @@ import jcc.type.Type;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.RequiredArgsConstructor;
 import lombok.Value;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
 @AllArgsConstructor
+@RequiredArgsConstructor
 public class FuncDefNode extends StmtNode {
     @Value
     public static class ParamDef {
@@ -19,10 +21,11 @@ public class FuncDefNode extends StmtNode {
         private String pname;
     }
 
-    private Type retvalType;
-    private String fname;
-    private List<ParamDef> params;
-    private BlockNode block;
+    private final Type retvalType;
+    private final String fname;
+    private final List<ParamDef> params;
+    private final BlockNode block;
+    private int lvarCnt;
 
     @Override
     public <E, S> S accept(NodeVisitor<E, S> v) {

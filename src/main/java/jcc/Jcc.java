@@ -34,8 +34,10 @@ public class Jcc {
         parser.setErrorHandler(new BailErrorStrategy());
         ProgramContext p = parser.program();
         
-        CodeGenerator gen = new CodeGenerator();
-        gen.generate(p.n);
+        NodePreprocessor pp = new NodePreprocessor();
+        pp.preProcess(p.n);
+        CodeGenerator gen = new CodeGenerator(pp);
+        gen.visit(p.n);
         gen.getAsm().write(out);
     }
     
