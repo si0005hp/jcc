@@ -14,6 +14,7 @@ import jcc.ast.BlockNode;
 import jcc.ast.BreakNode;
 import jcc.ast.ContinueNode;
 import jcc.ast.DereferNode;
+import jcc.ast.ExprNode;
 import jcc.ast.ExprStmtNode;
 import jcc.ast.FuncCallNode;
 import jcc.ast.FuncDefNode;
@@ -169,15 +170,26 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     
     @Override
     public Void visit(VarLetNode n) {
-        n.getExpr().accept(this);
-        LvarDefinition var = fScope.getVar(n.getVar().getVname());
+        varLet(n.getVar().getVname(), n.getExpr());
+        return null;
+    }
+    
+    @Override
+    public Void visit(VarInitNode n) {
+        fScope.addLvar(n.getLvar().getType(), n.getLvar().getVname());
+        varLet(n.getLvar().getVname(), n.getExpr());
+        return null;
+    }
+    
+    private void varLet(String vname, ExprNode val) {
+        val.accept(this);
+        LvarDefinition var = fScope.getVar(vname);
         if (var.isArg()) {
             asm.gent("mov %%rax, %%%s", ARG_REGS.get(var.getIdx() - 1));
         } else {
             String ax = axBySize(var.getType().getSize());
             asm.gent("mov %%%s, %s(%%rbp)", ax, var.getIdx());
         }
-        return null;
     }
     
     @Override
@@ -195,14 +207,6 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         return null;
     }
 
-    @Override
-    public Void visit(VarInitNode n) {
-        LvarDefinition var = fScope.addLvar(n.getLvar().getType(), n.getLvar().getVname());
-        n.getExpr().accept(this);
-        asm.gent("mov %%rax, %s(%%rbp)", var.getIdx());
-        return null;
-    }
-    
     @Override
     public Void visit(FuncCallNode n) {
         // process args
