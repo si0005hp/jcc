@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import jcc.ast.AddressNode;
+import jcc.ast.ArrLiteralNode;
 import jcc.ast.BinOpNode;
 import jcc.ast.BlockNode;
 import jcc.ast.BreakNode;
@@ -28,6 +29,7 @@ import jcc.ast.VarInitNode;
 import jcc.ast.VarLetNode;
 import jcc.ast.VarRefNode;
 import jcc.ast.WhileNode;
+import jcc.type.ArrayType;
 import jcc.type.VoidType;
 import lombok.Getter;
 
@@ -86,7 +88,10 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         asm.gen("%s:", n.getFname());
         asm.gent("push %%rbp");
         asm.gent("mov %%rsp, %%rbp");
-        asm.gent("sub $%s, %%rsp", 8 * n.getLvarCnt());
+        int iSum = n.getVars().stream().mapToInt(VarDefNode::getIdx).max().orElse(0);
+        if (iSum > 0) {
+            asm.gent("sub $%s, %%rsp", iSum);    
+        }
         
         /* funcBody */
         n.getBlock().accept(this);
@@ -162,45 +167,62 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
 
     @Override
     public Void visit(VarDefNode n) {
-        fScope.addLvar(n.getType(), n.getVname());
+        fScope.addLvar(n);
         return null;
     }
     
     @Override
     public Void visit(VarLetNode n) {
-        varLet(n.getVar().getVname(), n.getExpr());
+        letVar(n.getVar().getVname(), n.getExpr());
         return null;
     }
     
     @Override
     public Void visit(VarInitNode n) {
-        fScope.addLvar(n.getLvar().getType(), n.getLvar().getVname());
-        varLet(n.getLvar().getVname(), n.getExpr());
+        fScope.addLvar(n.getLvar());
+        if (n.getLvar().getType() instanceof ArrayType) {
+            initArr(n.getLvar(), (ArrLiteralNode) n.getExpr());
+        } else {
+            letVar(n.getLvar().getVname(), n.getExpr());            
+        }
         return null;
     }
+
+    private void initArr(VarDefNode v, ArrLiteralNode n) {
+        ArrayType t = (ArrayType) v.getType();
+        for (int i = 0; i < n.getElems().size(); i++) {
+            n.getElems().get(i).accept(this);
+            asm.gent("mov %%%s, %s(%%rbp)", 
+                    axBySize(t.getBaseType().getSize()),
+                    -(v.getIdx() - i * t.getBaseType().getSize()));
+        }
+    }
     
-    private void varLet(String vname, ExprNode val) {
+    private void letVar(String vname, ExprNode val) {
         val.accept(this);
         LvarDefinition var = fScope.getVar(vname);
         if (var.isArg()) {
             asm.gent("mov %%rax, %%%s", ARG_REGS.get(var.getIdx() - 1));
         } else {
-            String ax = axBySize(var.getType().getSize());
-            asm.gent("mov %%%s, %s(%%rbp)", ax, var.getIdx());
+            asm.gent("mov %%%s, %s(%%rbp)", axBySize(var.getType().getSize()), var.getIdx());
         }
     }
     
     @Override
     public Void visit(VarRefNode n) {
         LvarDefinition var = fScope.getVar(n.getVname());
-        if (var.isArg()) {
-            asm.gent("mov %%%s, %%rax", ARG_REGS.get(var.getIdx() - 1));
+        if (var.getType() instanceof ArrayType) {
+            refAddres(var);
         } else {
-            String ax = axBySize(var.getType().getSize());
-            if (ax.equals("al")) {
-                asm.gent("mov $0, %%eax", var.getIdx(), ax);
+            if (var.isArg()) {
+                asm.gent("mov %%%s, %%rax", ARG_REGS.get(var.getIdx() - 1));
+            } else {
+                String ax = axBySize(var.getType().getSize());
+                if (ax.equals("al")) {
+                    asm.gent("mov $0, %%eax", var.getIdx(), ax);
+                }
+                asm.gent("mov %s(%%rbp), %%%s", var.getIdx(), ax);
             }
-            asm.gent("mov %s(%%rbp), %%%s", var.getIdx(), ax);
         }
         return null;
     }
@@ -236,12 +258,16 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     @Override
     public Void visit(AddressNode n) {
         LvarDefinition var = fScope.getVar(n.getVar().getVname());
+        refAddres(var);
+        return null;
+    }
+    
+    private void refAddres(LvarDefinition var) {
         if (var.isArg()) {
             asm.gent("lea %%%s, %%rax", ARG_REGS.get(var.getIdx() - 1));
         } else {
             asm.gent("lea %s(%%rbp), %%rax", var.getIdx());
         }
-        return null;
     }
 
     @Override
@@ -273,6 +299,11 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     public Void visit(ContinueNode n) {
         // TODO Auto-generated method stub
         return null;
+    }
+    
+    @Override
+    public Void visit(ArrLiteralNode n) {
+        return null; // Nothing to do
     }
 
 }

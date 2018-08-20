@@ -44,6 +44,16 @@ varDefStmt returns [VarDefNode n]
 
 varInitStmt returns [VarInitNode n]
 	: type IDT EQ expr SEMICOLON  { $n = new VarInitNode(new VarDefNode($type.t, $IDT.text), $expr.n); }
+	| arrInitStmt                 { $n = $arrInitStmt.n; }
+	;
+
+arrInitStmt returns [VarInitNode n]
+	: type IDT LBRACK INTLIT? RBRACK EQ LBRACE exprList? RBRACE SEMICOLON  
+	  { 
+	  	int size = $INTLIT == null ? 0 : $INTLIT.int;
+	  	$n = new VarInitNode(new VarDefNode(ArrayType.of($type.t, size), $IDT.text),
+	  		new ArrLiteralNode($exprList.ctx == null ? new ArrayList<>() : $exprList.ns)); 
+	  }
 	;
 
 varLetStmt returns [VarLetNode n]
@@ -133,8 +143,8 @@ var returns [VarRefNode n]
 	;
 
 type returns [Type t]
-	: cType      { $t = IntegerType.of($cType.t); }
-	| cType '*'  { $t = PointerType.of($cType.t); }
+	: cType        { $t = IntegerType.of($cType.t); }
+	| bt=type '*'  { $t = PointerType.of($bt.t); }
 	;
 
 cType returns [CType t]

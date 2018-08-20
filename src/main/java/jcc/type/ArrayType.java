@@ -7,11 +7,12 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @AllArgsConstructor(staticName = "of")
-public class PointerType extends Type {
+public class ArrayType extends Type {
     private Type baseType;
+    private int size;
 
     @Override
     public int getSize() {
-        return 8;
+        return baseType.getSize() * size;
     }
 }

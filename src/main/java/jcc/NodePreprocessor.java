@@ -10,7 +10,7 @@ public class NodePreprocessor {
 
     public void preProcess(ProgramNode n) {
         processConstants(n);
-        processFVarCount(n);
+        processFVarAnalyze(n);
     }
     
     private void processConstants(ProgramNode n) {
@@ -20,8 +20,8 @@ public class NodePreprocessor {
         }
     }
     
-    private void processFVarCount(ProgramNode n) {
-        new FuncLvarCounter().visit(n);
+    private void processFVarAnalyze(ProgramNode n) {
+        new FuncVarAnalyzer().visit(n);
     }
 
 }

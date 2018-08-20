@@ -1,6 +1,7 @@
 package jcc;
 
 import jcc.ast.AddressNode;
+import jcc.ast.ArrLiteralNode;
 import jcc.ast.BinOpNode;
 import jcc.ast.BlockNode;
 import jcc.ast.BreakNode;
@@ -30,6 +31,7 @@ public interface NodeVisitor<E, S> {
     E visit(StrLiteralNode n);
     E visit(AddressNode n);
     E visit(DereferNode n);
+    E visit(ArrLiteralNode n);
     // stmt
     S visit(BlockNode n);
     S visit(FuncDefNode n);

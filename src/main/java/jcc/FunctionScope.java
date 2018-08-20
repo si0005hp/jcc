@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import jcc.ast.FuncDefNode;
+import jcc.ast.VarDefNode;
 import jcc.type.Type;
 import lombok.Getter;
 
@@ -41,9 +42,9 @@ public class FunctionScope {
     public LvarDefinition addArg(Type type, String vname) {
         return addVar(new LvarDefinition(type, vname, true, ++argIdx));
     }
-
-    public LvarDefinition addLvar(Type type, String vname) {
-        return addVar(new LvarDefinition(type, vname, false, ++lvarIdx * -8));
+    
+    public LvarDefinition addLvar(VarDefNode v) {
+        return addVar(new LvarDefinition(v.getType(), v.getVname(), false, v.getIdx() * -1));
     }
 
     private LvarDefinition addVar(LvarDefinition ld) {

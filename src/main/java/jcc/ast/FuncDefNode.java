@@ -25,7 +25,7 @@ public class FuncDefNode extends StmtNode {
     private final String fname;
     private final List<ParamDef> params;
     private final BlockNode block;
-    private int lvarCnt;
+    private List<VarDefNode> vars;
 
     @Override
     public <E, S> S accept(NodeVisitor<E, S> v) {

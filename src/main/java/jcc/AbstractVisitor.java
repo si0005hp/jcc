@@ -1,6 +1,7 @@
 package jcc;
 
 import jcc.ast.AddressNode;
+import jcc.ast.ArrLiteralNode;
 import jcc.ast.BinOpNode;
 import jcc.ast.BlockNode;
 import jcc.ast.BreakNode;
@@ -138,4 +139,10 @@ public abstract class AbstractVisitor implements NodeVisitor<Void, Void> {
         return null;
     }
 
+    @Override
+    public Void visit(ArrLiteralNode n) {
+        n.getElems().forEach(e -> e.accept(this));
+        return null;
+    }
+    
 }
