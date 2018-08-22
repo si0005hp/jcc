@@ -12,4 +12,9 @@ public class VoidType extends Type {
     public int getSize() {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public Type baseType() {
+        throw new UnsupportedOperationException();
+    }
 }

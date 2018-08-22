@@ -14,10 +14,17 @@ public class IntegerType extends Type {
     @Override
     public int getSize() {
         switch (baseType) {
-        case INT: return 4;
         case CHAR: return 1;
+        case SHORT: return 2;
+        case INT: return 4;
+        case LONG: return 8;
         default: 
             throw new IllegalArgumentException(baseType.name());
         }
+    }
+    
+    @Override
+    public Type baseType() {
+        throw new UnsupportedOperationException();
     }
 }

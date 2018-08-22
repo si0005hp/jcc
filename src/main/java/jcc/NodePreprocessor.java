@@ -11,6 +11,7 @@ public class NodePreprocessor {
     public void preProcess(ProgramNode n) {
         processConstants(n);
         processFVarAnalyze(n);
+        processResolveExprType(n);
     }
     
     private void processConstants(ProgramNode n) {
@@ -22,6 +23,10 @@ public class NodePreprocessor {
     
     private void processFVarAnalyze(ProgramNode n) {
         new FuncVarAnalyzer().visit(n);
+    }
+    
+    private void processResolveExprType(ProgramNode n) {
+        new ExprTypeResolver().visit(n);
     }
 
 }

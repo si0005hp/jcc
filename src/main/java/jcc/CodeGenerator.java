@@ -30,6 +30,8 @@ import jcc.ast.VarLetNode;
 import jcc.ast.VarRefNode;
 import jcc.ast.WhileNode;
 import jcc.type.ArrayType;
+import jcc.type.IntegerType;
+import jcc.type.PointerType;
 import jcc.type.VoidType;
 import lombok.Getter;
 
@@ -127,7 +129,8 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     
     @Override
     public Void visit(IntLiteralNode n) {
-        switch (n.getCType()) {
+        IntegerType t = (IntegerType) n.getType();
+        switch (t.getBaseType()) {
         case INT:
             asm.gent("mov $%d, %%eax", n.getVal());
             break;
@@ -135,13 +138,18 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
             asm.gent("mov $%d, %%rax", n.getVal());
             break;
         default:
-            throw new IllegalArgumentException(n.getCType().name());
+            throw new IllegalArgumentException(t.getBaseType().name());
         }
         return null;
     }
 
     @Override
     public Void visit(BinOpNode n) {
+        if (n.getType() instanceof PointerType) {
+            pointerArith(n);
+            return null;
+        }
+        
         String op = null;
         switch (n.getOpType()) {
         case ADD: op = "add"; break;
@@ -164,10 +172,29 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         }
         return null;
     }
+    
+    private void pointerArith(BinOpNode n) {
+        ExprNode ptr; ExprNode integer;
+        if (n.getLeft().type() instanceof PointerType) {
+            ptr = n.getLeft(); integer = n.getRight(); 
+        } else {
+            ptr = n.getRight(); integer = n.getLeft();
+        }
+        ptr.accept(this);
+        asm.gent("push %%rax");
+        integer.accept(this);
+        int ptrBaseSze = ptr.type().baseType().getSize();
+        if (ptrBaseSze > 1) {
+            asm.gent("imul $%s, %%rax", ptrBaseSze);
+        }
+        asm.gent("mov %%rax, %%rcx");
+        asm.gent("pop %%rax");
+        asm.gent("add %%rcx, %%rax");
+    }
 
     @Override
     public Void visit(VarDefNode n) {
-        fScope.addLvar(n);
+        fScope.addVar(n);
         return null;
     }
     
@@ -179,7 +206,7 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     
     @Override
     public Void visit(VarInitNode n) {
-        fScope.addLvar(n.getLvar());
+        n.getLvar().accept(this);
         if (n.getLvar().getType() instanceof ArrayType) {
             initArr(n.getLvar(), (ArrLiteralNode) n.getExpr());
         } else {

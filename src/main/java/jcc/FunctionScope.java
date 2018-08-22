@@ -8,7 +8,6 @@ import java.util.Optional;
 
 import jcc.ast.FuncDefNode;
 import jcc.ast.VarDefNode;
-import jcc.type.Type;
 import lombok.Getter;
 
 @Getter
@@ -22,9 +21,9 @@ public class FunctionScope {
 
     public FunctionScope(FuncDefNode n) {
         pushScope(); // This initial scope is the layer of func args
-        n.getParams().forEach(p -> addArg(p.getType(), p.getPname())); // Register params to scope
+        addFuncArgs(n); // Register params to scope
     }
-
+    
     /**
      * Supposed to be called by each block starts
      */
@@ -39,20 +38,22 @@ public class FunctionScope {
         scopeStack.removeLast();
     }
 
-    public LvarDefinition addArg(Type type, String vname) {
-        return addVar(new LvarDefinition(type, vname, true, ++argIdx));
+    private void addFuncArgs(FuncDefNode n) {
+        n.getParams().stream()
+            .map(p -> new LvarDefinition(p.getType(), p.getPname(), true, ++argIdx))
+            .forEach(this::addVarDef);
     }
     
-    public LvarDefinition addLvar(VarDefNode v) {
-        return addVar(new LvarDefinition(v.getType(), v.getVname(), false, v.getIdx() * -1));
+    public LvarDefinition addVar(VarDefNode v) {
+        return addVarDef(new LvarDefinition(v.getType(), v.getVname(), false, v.getIdx() * -1));
     }
 
-    private LvarDefinition addVar(LvarDefinition ld) {
-        if (findVar(ld.getVname()).isPresent()) {
-            throw new RuntimeException("Duplicated variable declaration: " + ld.getVname());
+    private LvarDefinition addVarDef(LvarDefinition v) {
+        if (findVar(v.getVname()).isPresent()) {
+            throw new RuntimeException("Duplicated variable declaration: " + v.getVname());
         }
-        scopeStack.getLast().put(ld.getVname(), ld);
-        return ld;
+        scopeStack.getLast().put(v.getVname(), v);
+        return v;
     }
 
     public LvarDefinition getVar(String vname) {

@@ -9,8 +9,10 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public enum CType {
-    INT("int"),
     CHAR("char"),
+    SHORT("short"),
+    INT("int"),
+    LONG("long"),
     VOID("void");
     
     @Getter

@@ -35,8 +35,8 @@ public abstract class AbstractVisitor implements NodeVisitor<Void, Void> {
 
     @Override
     public Void visit(BinOpNode n) {
-        n.getLeft().accept(this);
         n.getRight().accept(this);
+        n.getLeft().accept(this);
         return null;
     }
 

@@ -52,7 +52,7 @@ arrInitStmt returns [VarInitNode n]
 	  { 
 	  	int size = $INTLIT == null ? 0 : $INTLIT.int;
 	  	$n = new VarInitNode(new VarDefNode(ArrayType.of($type.t, size), $IDT.text),
-	  		new ArrLiteralNode($exprList.ctx == null ? new ArrayList<>() : $exprList.ns)); 
+	  		new ArrLiteralNode($type.t, $exprList.ctx == null ? new ArrayList<>() : $exprList.ns)); 
 	  }
 	;
 
@@ -125,8 +125,8 @@ expr returns [ExprNode n]
 	| l=expr op=('+'|'-') r=expr                      { $n = new BinOpNode($op.type, $l.n, $r.n); }
 	| l=expr op=('<<'|'>>') r=expr                    { $n = new BinOpNode($op.type, $l.n, $r.n); }
 	| l=expr op=('=='|'!='|'>'|'<'|'>='|'<=') r=expr  { $n = new BinOpNode($op.type, $l.n, $r.n); }
-	| INTLIT                                          { $n = new IntLiteralNode(CType.INT, $INTLIT.int); }
-	| CHARLIT                                         { $n = new IntLiteralNode(CType.CHAR, StrUtils.characterCode($CHARLIT.text)); }
+	| INTLIT                                          { $n = new IntLiteralNode(IntegerType.of(CType.INT), $INTLIT.int); }
+	| CHARLIT                                         { $n = new IntLiteralNode(IntegerType.of(CType.CHAR), StrUtils.characterCode($CHARLIT.text)); }
 	| STRLIT                                          
 	  { 
 	  	StrLiteralNode s = new StrLiteralNode(StrUtils.stringValue($STRLIT.text));

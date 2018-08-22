@@ -1,6 +1,10 @@
 package jcc.ast;
 
+import jcc.CType;
 import jcc.NodeVisitor;
+import jcc.type.IntegerType;
+import jcc.type.PointerType;
+import jcc.type.Type;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -17,5 +21,10 @@ public class StrLiteralNode extends ExprNode {
     @Override
     public <E, S> E accept(NodeVisitor<E, S> v) {
         return v.visit(this);
+    }
+
+    @Override
+    public Type type() {
+        return PointerType.of(IntegerType.of(CType.CHAR));
     }
 }

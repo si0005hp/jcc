@@ -15,4 +15,9 @@ public class ArrayType extends Type {
     public int getSize() {
         return baseType.getSize() * size;
     }
+
+    @Override
+    public Type baseType() {
+        return baseType;
+    }
 }

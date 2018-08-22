@@ -14,4 +14,9 @@ public class PointerType extends Type {
     public int getSize() {
         return 8;
     }
+    
+    @Override
+    public Type baseType() {
+        return baseType;
+    }
 }
