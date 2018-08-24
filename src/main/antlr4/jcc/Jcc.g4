@@ -50,15 +50,15 @@ varInitStmt returns [VarInitNode n]
 arrInitStmt returns [VarInitNode n]
 	: type IDT LBRACK INTLIT? RBRACK EQ LBRACE exprList? RBRACE SEMICOLON  
 	  { 
-	  	int size = $INTLIT == null ? 0 : $INTLIT.int;
-	  	$n = new VarInitNode(new VarDefNode(ArrayType.of($type.t, size), $IDT.text),
-	  		new ArrLiteralNode($type.t, $exprList.ctx == null ? new ArrayList<>() : $exprList.ns)); 
+	  	ArrLiteralNode an = new ArrLiteralNode($type.t, $exprList.ctx == null ? new ArrayList<>() : $exprList.ns);
+	  	int size = $INTLIT == null ? an.getElems().size() : $INTLIT.int;
+	  	$n = new VarInitNode(new VarDefNode(ArrayType.of($type.t, size), $IDT.text), an); 
 	  }
 	| type IDT LBRACK INTLIT? RBRACK EQ STRLIT SEMICOLON  
 	  { 
-	  	int size = $INTLIT == null ? 0 : $INTLIT.int;
-	  	$n = new VarInitNode(new VarDefNode(ArrayType.of($type.t, size), $IDT.text),
-	  		new ArrLiteralNode($type.t, ParseUtils.strToIntLiteralNodes(StrUtils.stringValue($STRLIT.text))));
+	  	ArrLiteralNode an = new ArrLiteralNode($type.t, ParseUtils.strToIntLiteralNodes(StrUtils.stringValue($STRLIT.text)));
+	  	int size = $INTLIT == null ? an.getElems().size() : $INTLIT.int;
+	  	$n = new VarInitNode(new VarDefNode(ArrayType.of($type.t, size), $IDT.text), an);
 	  }
 	;
 
