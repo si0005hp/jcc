@@ -13,6 +13,7 @@ func3.c	e	9
 func4.c	e	8
 func5.c	e	20
 func6.c	e	@Fail
+func7.c	e	40
 char1.c	e	97
 char2.c	e	98
 str1.c	s	a
