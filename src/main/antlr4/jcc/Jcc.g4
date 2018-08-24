@@ -54,6 +54,12 @@ arrInitStmt returns [VarInitNode n]
 	  	$n = new VarInitNode(new VarDefNode(ArrayType.of($type.t, size), $IDT.text),
 	  		new ArrLiteralNode($type.t, $exprList.ctx == null ? new ArrayList<>() : $exprList.ns)); 
 	  }
+	| type IDT LBRACK INTLIT? RBRACK EQ STRLIT SEMICOLON  
+	  { 
+	  	int size = $INTLIT == null ? 0 : $INTLIT.int;
+	  	$n = new VarInitNode(new VarDefNode(ArrayType.of($type.t, size), $IDT.text),
+	  		new ArrLiteralNode($type.t, ParseUtils.strToIntLiteralNodes(StrUtils.stringValue($STRLIT.text))));
+	  }
 	;
 
 varLetStmt returns [VarLetNode n]
