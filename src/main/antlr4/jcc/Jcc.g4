@@ -29,10 +29,10 @@ stmt returns [StmtNode n]
 	| returnStmt    { $n = $returnStmt.n; }
 	| exprStmt      { $n = $exprStmt.n; }
 	| ifStmt        { $n = $ifStmt.n; }
+	| forStmt       { $n = $forStmt.n; }
 	| whileStmt     { $n = $whileStmt.n; }
 	| breakStmt     { $n = $breakStmt.n; }
 	| continueStmt  { $n = $continueStmt.n; }
-	// | printfStmt    { $n = $printfStmt.n; }
 	| block         { $n = $block.n; }
 	;
 
@@ -56,6 +56,16 @@ ifStmt returns [IfNode n]
 	  }
 	;
 
+forStmt returns [ForNode n]
+	: FOR LPAREN init=expr? SEMICOLON cond=expr? SEMICOLON step=expr? RPAREN body=stmt
+	  {
+	  	$n = new ForNode($init.ctx == null ? null : $init.n,
+	  		$cond.ctx == null ? null : $cond.n,
+	  		$step.ctx == null ? null : $step.n,
+	  		$body.n);
+	  }
+	;
+
 whileStmt returns [WhileNode n]
 	: WHILE LPAREN cond=expr RPAREN body=stmt  { $n = new WhileNode($cond.n, $body.n); }
 	;
@@ -67,17 +77,6 @@ breakStmt returns [BreakNode n]
 continueStmt returns [ContinueNode n]
 	: CONTINUE SEMICOLON  { $n = new ContinueNode(); }
 	;
-
-// Temporal node to compile 'printf' in Jcc
-/*
-printfStmt returns [PrintfNode n]
-@init { List<ExprNode> args = new ArrayList<>(); }
-	: 'printf' LPAREN fmtStr=expr ( ',' expr { args.add($expr.n); } )* RPAREN SEMICOLON
-	  {
-	  	$n = new PrintfNode($fmtStr.n, args);
-	  }
-	;
-*/
 
 block returns [BlockNode n]
 @init { List<StmtNode> stmts = new ArrayList<>(); }
@@ -172,6 +171,7 @@ VOID : 'void' ;
 RETURN : 'return' ;
 IF : 'if' ;
 ELSE : 'else' ;
+FOR : 'for' ;
 WHILE : 'while' ;
 BREAK : 'break' ;
 CONTINUE : 'continue' ;

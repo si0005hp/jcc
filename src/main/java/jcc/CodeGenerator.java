@@ -1,9 +1,6 @@
 package jcc;
 
-import static jcc.JccParser.ADD;
-import static jcc.JccParser.DIV;
-import static jcc.JccParser.MUL;
-import static jcc.JccParser.SUB;
+import static jcc.JccParser.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -149,12 +146,14 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     @Override
     public Void visit(BinOpNode n) {
         if (n.getType() instanceof PointerType) {
-            pointerArith(n);
+            binOpPtrArith(n);
             return null;
         }
         
         String op = null;
         switch (n.getOpType()) {
+        case GT: binOpCmp("setg", n); return null;
+        case LT: binOpCmp("setl", n); return null;
         case ADD: op = "add"; break;
         case SUB: op = "sub"; break;
         case MUL: op = "imul"; break;
@@ -176,7 +175,7 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         return null;
     }
     
-    private void pointerArith(BinOpNode n) {
+    private void binOpPtrArith(BinOpNode n) {
         ExprNode ptr; ExprNode integer;
         if (n.getLeft().type() instanceof PointerType) {
             ptr = n.getLeft(); integer = n.getRight(); 
@@ -194,7 +193,17 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         asm.gent("pop %%rax");
         asm.gent("add %%rcx, %%rax");
     }
-
+    
+    private void binOpCmp(String inst, BinOpNode n) {
+        n.getLeft().accept(this);
+        asm.gent("push %%rax");
+        n.getRight().accept(this);
+        asm.gent("pop %%rcx");
+        asm.gent("cmp %%rax, %%rcx");
+        asm.gent("%s %%al", inst);
+        asm.gent("movzb %%al, %%eax");
+    }
+    
     @Override
     public Void visit(VarDefNode n) {
         fScope.addVar(n);
@@ -216,6 +225,11 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
             letVar(n.getLvar().getVname(), n.getExpr());            
         }
         return null;
+    }
+    
+    @Override
+    public Void visit(ArrLiteralNode n) {
+        return null; // Nothing to do
     }
 
     private void initArr(VarDefNode v, ArrLiteralNode n) {
@@ -329,6 +343,11 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     private String makeJLbl() {
         return String.format(".L%d", jLblIdx++);
     }
+    
+    @Override
+    public Void visit(ForNode n) {
+        return null;
+    }
 
     @Override
     public Void visit(WhileNode n) {
@@ -348,15 +367,4 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         return null;
     }
     
-    @Override
-    public Void visit(ArrLiteralNode n) {
-        return null; // Nothing to do
-    }
-
-    @Override
-    public Void visit(ForNode n) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
 }

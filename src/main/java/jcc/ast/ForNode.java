@@ -9,9 +9,9 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = false)
 @AllArgsConstructor
 public class ForNode extends StmtNode {
-    private StmtNode init;
+    private ExprNode init;
     private ExprNode cond;
-    private StmtNode step;
+    private ExprNode step;
     private StmtNode body;
 
     @Override
