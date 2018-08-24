@@ -26,8 +26,6 @@ funcDef returns [FuncDefNode n]
 
 stmt returns [StmtNode n]
 	: varDefStmt    { $n = $varDefStmt.n; }
-	| varInitStmt   { $n = $varInitStmt.n; }
-	| varLetStmt    { $n = $varLetStmt.n; }
 	| returnStmt    { $n = $returnStmt.n; }
 	| exprStmt      { $n = $exprStmt.n; }
 	| ifStmt        { $n = $ifStmt.n; }
@@ -40,30 +38,6 @@ stmt returns [StmtNode n]
 
 varDefStmt returns [VarDefNode n]
 	: type IDT SEMICOLON  { $n = new VarDefNode($type.t, $IDT.text); }
-	;
-
-varInitStmt returns [VarInitNode n]
-	: type IDT EQ expr SEMICOLON  { $n = new VarInitNode(new VarDefNode($type.t, $IDT.text), $expr.n); }
-	| arrInitStmt                 { $n = $arrInitStmt.n; }
-	;
-
-arrInitStmt returns [VarInitNode n]
-	: type IDT LBRACK INTLIT? RBRACK EQ LBRACE exprList? RBRACE SEMICOLON  
-	  { 
-	  	ArrLiteralNode an = new ArrLiteralNode($type.t, $exprList.ctx == null ? new ArrayList<>() : $exprList.ns);
-	  	int size = $INTLIT == null ? an.getElems().size() : $INTLIT.int;
-	  	$n = new VarInitNode(new VarDefNode(ArrayType.of($type.t, size), $IDT.text), an); 
-	  }
-	| type IDT LBRACK INTLIT? RBRACK EQ STRLIT SEMICOLON  
-	  { 
-	  	ArrLiteralNode an = new ArrLiteralNode($type.t, ParseUtils.strToIntLiteralNodes(StrUtils.stringValue($STRLIT.text)));
-	  	int size = $INTLIT == null ? an.getElems().size() : $INTLIT.int;
-	  	$n = new VarInitNode(new VarDefNode(ArrayType.of($type.t, size), $IDT.text), an);
-	  }
-	;
-
-varLetStmt returns [VarLetNode n]
-	: var EQ expr SEMICOLON  { $n = new VarLetNode($var.n, $expr.n); }
 	;
 
 returnStmt returns [ReturnNode n]
@@ -142,6 +116,32 @@ expr returns [ExprNode n]
 	| IDT LPAREN exprList? RPAREN                     { $n = new FuncCallNode($IDT.text, $exprList.ctx == null ? new ArrayList<>() : $exprList.ns); }
 	| var                                             { $n = $var.n; }
 	| LPAREN expr RPAREN                              { $n = $expr.n; }
+	| varInit                                         { $n = $varInit.n; }
+	| varLet                                          { $n = $varLet.n; }
+	;
+
+varLet returns [VarLetNode n]
+	: var EQ expr  { $n = new VarLetNode($var.n, $expr.n); }
+	;
+
+varInit returns [VarInitNode n]
+	: type IDT EQ expr  { $n = new VarInitNode(new VarDefNode($type.t, $IDT.text), $expr.n); }
+	| arrInit           { $n = $arrInit.n; }
+	;
+
+arrInit returns [VarInitNode n]
+	: type IDT LBRACK INTLIT? RBRACK EQ LBRACE exprList? RBRACE  
+	  { 
+	  	ArrLiteralNode an = new ArrLiteralNode($type.t, $exprList.ctx == null ? new ArrayList<>() : $exprList.ns);
+	  	int size = $INTLIT == null ? an.getElems().size() : $INTLIT.int;
+	  	$n = new VarInitNode(new VarDefNode(ArrayType.of($type.t, size), $IDT.text), an); 
+	  }
+	| type IDT LBRACK INTLIT? RBRACK EQ STRLIT  
+	  { 
+	  	ArrLiteralNode an = new ArrLiteralNode($type.t, ParseUtils.strToIntLiteralNodes(StrUtils.stringValue($STRLIT.text)));
+	  	int size = $INTLIT == null ? an.getElems().size() : $INTLIT.int;
+	  	$n = new VarInitNode(new VarDefNode(ArrayType.of($type.t, size), $IDT.text), an);
+	  }
 	;
 
 var returns [VarRefNode n]

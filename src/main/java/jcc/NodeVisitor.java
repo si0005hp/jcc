@@ -33,13 +33,13 @@ public interface NodeVisitor<E, S> {
     E visit(AddressNode n);
     E visit(DereferNode n);
     E visit(ArrLiteralNode n);
+    E visit(VarLetNode n);
+    E visit(VarInitNode n);
     // stmt
     S visit(BlockNode n);
     S visit(FuncDefNode n);
     S visit(VarDefNode n);
     S visit(ReturnNode n);
-    S visit(VarLetNode n);
-    S visit(VarInitNode n);
     S visit(ExprStmtNode n);
     S visit(IfNode n);
     S visit(WhileNode n);
