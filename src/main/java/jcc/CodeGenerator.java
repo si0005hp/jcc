@@ -42,6 +42,8 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     
     private final Asm asm = new Asm();
     private final ConstantTable constTbl;
+    
+    private int jLblIdx = 0;
 
     public CodeGenerator(NodePreprocessor pp) {
         this.constTbl = pp.getConstTbl();
@@ -306,8 +308,25 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
 
     @Override
     public Void visit(IfNode n) {
-        // TODO Auto-generated method stub
+        n.getCond().accept(this);
+        String els = makeJLbl();
+        asm.gent("test %%rax, %%rax");
+        asm.gent("je %s", els);
+        n.getThenBody().accept(this);
+        if (n.getElseBody() != null) {
+            String end = makeJLbl();
+            asm.gent("jmp %s", end);
+            asm.gen("%s:", els);
+            n.getElseBody().accept(this);
+            asm.gen("%s:", end);
+        } else {
+            asm.gen("%s:", els);
+        }
         return null;
+    }
+    
+    private String makeJLbl() {
+        return String.format(".L%d", jLblIdx++);
     }
 
     @Override
