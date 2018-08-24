@@ -8,6 +8,7 @@ import jcc.ast.BreakNode;
 import jcc.ast.ContinueNode;
 import jcc.ast.DereferNode;
 import jcc.ast.ExprStmtNode;
+import jcc.ast.ForNode;
 import jcc.ast.FuncCallNode;
 import jcc.ast.FuncDefNode;
 import jcc.ast.IfNode;
@@ -44,4 +45,5 @@ public interface NodeVisitor<E, S> {
     S visit(WhileNode n);
     S visit(BreakNode n);
     S visit(ContinueNode n);
+    S visit(ForNode n);
 }

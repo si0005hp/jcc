@@ -17,6 +17,7 @@ import jcc.ast.ContinueNode;
 import jcc.ast.DereferNode;
 import jcc.ast.ExprNode;
 import jcc.ast.ExprStmtNode;
+import jcc.ast.ForNode;
 import jcc.ast.FuncCallNode;
 import jcc.ast.FuncDefNode;
 import jcc.ast.IfNode;
@@ -350,6 +351,12 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     @Override
     public Void visit(ArrLiteralNode n) {
         return null; // Nothing to do
+    }
+
+    @Override
+    public Void visit(ForNode n) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

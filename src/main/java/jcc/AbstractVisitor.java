@@ -8,6 +8,7 @@ import jcc.ast.BreakNode;
 import jcc.ast.ContinueNode;
 import jcc.ast.DereferNode;
 import jcc.ast.ExprStmtNode;
+import jcc.ast.ForNode;
 import jcc.ast.FuncCallNode;
 import jcc.ast.FuncDefNode;
 import jcc.ast.IfNode;
@@ -142,6 +143,15 @@ public abstract class AbstractVisitor implements NodeVisitor<Void, Void> {
     @Override
     public Void visit(ArrLiteralNode n) {
         n.getElems().forEach(e -> e.accept(this));
+        return null;
+    }
+    
+    @Override
+    public Void visit(ForNode n) {
+        n.getInit().accept(this);
+        n.getCond().accept(this);
+        n.getStep().accept(this);
+        n.getBody().accept(this);
         return null;
     }
     
