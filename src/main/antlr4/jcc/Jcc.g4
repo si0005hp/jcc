@@ -98,7 +98,7 @@ exprList returns [List<ExprNode> ns]
 	;
 
 expr returns [ExprNode n]
-	: '*' v=var                                       { $n = new DereferNode($v.n); }
+	: derefer                                         { $n = $derefer.n; }
 	| '&' v=var                                       { $n = new AddressNode($v.n); }
 	| l=expr op=('*'|'/'|'%') r=expr                  { $n = new BinOpNode($op.type, $l.n, $r.n); }
 	| l=expr op=('+'|'-') r=expr                      { $n = new BinOpNode($op.type, $l.n, $r.n); }
@@ -116,11 +116,12 @@ expr returns [ExprNode n]
 	| var                                             { $n = $var.n; }
 	| LPAREN expr RPAREN                              { $n = $expr.n; }
 	| varInit                                         { $n = $varInit.n; }
-	| varLet                                          { $n = $varLet.n; }
+	| assign                                          { $n = $assign.n; }
 	;
 
-varLet returns [VarLetNode n]
-	: var EQ expr  { $n = new VarLetNode($var.n, $expr.n); }
+assign returns [AssignNode n]
+	: var EQ v=expr      { $n = new AssignNode($var.n, $v.n); }
+	| derefer EQ v=expr  { $n = new AssignNode($derefer.n, $v.n); }
 	;
 
 varInit returns [VarInitNode n]
@@ -141,6 +142,10 @@ arrInit returns [VarInitNode n]
 	  	int size = $INTLIT == null ? an.getElems().size() : $INTLIT.int;
 	  	$n = new VarInitNode(new VarDefNode(ArrayType.of($type.t, size), $IDT.text), an);
 	  }
+	;
+
+derefer returns [DereferNode n]
+	: '*' v=var  { $n = new DereferNode($v.n); }
 	;
 
 var returns [VarRefNode n]

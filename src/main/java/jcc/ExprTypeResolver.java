@@ -6,7 +6,6 @@ import java.util.Map;
 import jcc.ast.AddressNode;
 import jcc.ast.BinOpNode;
 import jcc.ast.BlockNode;
-import jcc.ast.DereferNode;
 import jcc.ast.FuncCallNode;
 import jcc.ast.FuncDefNode;
 import jcc.ast.VarDefNode;
@@ -67,14 +66,6 @@ public class ExprTypeResolver extends AbstractVisitor {
         } else {
             n.setType(PointerType.of(vType));
         }
-        return null;
-    }
-    
-    @Override
-    public Void visit(DereferNode n) {
-        super.visit(n);
-        Type vType = n.getVar().type();
-        n.setType(vType.baseType());
         return null;
     }
     

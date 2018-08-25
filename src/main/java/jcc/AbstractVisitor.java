@@ -18,7 +18,7 @@ import jcc.ast.ReturnNode;
 import jcc.ast.StrLiteralNode;
 import jcc.ast.VarDefNode;
 import jcc.ast.VarInitNode;
-import jcc.ast.VarLetNode;
+import jcc.ast.AssignNode;
 import jcc.ast.VarRefNode;
 import jcc.ast.WhileNode;
 
@@ -95,7 +95,8 @@ public abstract class AbstractVisitor implements NodeVisitor<Void, Void> {
     }
 
     @Override
-    public Void visit(VarLetNode n) {
+    public Void visit(AssignNode n) {
+        n.getVar().accept(this);
         n.getExpr().accept(this);
         return null;
     }

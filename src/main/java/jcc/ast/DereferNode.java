@@ -5,15 +5,12 @@ import jcc.type.Type;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.RequiredArgsConstructor;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
 @AllArgsConstructor
-@RequiredArgsConstructor
 public class DereferNode extends ExprNode {
-    private final VarRefNode var;
-    private Type type;
+    private VarRefNode var;
 
     @Override
     public <E, S> E accept(NodeVisitor<E, S> v) {
@@ -22,6 +19,6 @@ public class DereferNode extends ExprNode {
 
     @Override
     public Type type() {
-        return type;
+        return var.getType().baseType();
     }
 }

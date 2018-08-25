@@ -24,7 +24,7 @@ import jcc.ast.ReturnNode;
 import jcc.ast.StrLiteralNode;
 import jcc.ast.VarDefNode;
 import jcc.ast.VarInitNode;
-import jcc.ast.VarLetNode;
+import jcc.ast.AssignNode;
 import jcc.ast.VarRefNode;
 import jcc.ast.WhileNode;
 import jcc.type.ArrayType;
@@ -211,9 +211,37 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     }
     
     @Override
-    public Void visit(VarLetNode n) {
-        letVar(n.getVar().getVname(), n.getExpr());
+    public Void visit(AssignNode n) {
+        assign(n.getVar(), n.getExpr());
         return null;
+    }
+    
+    private void assign(ExprNode l, ExprNode v) {
+        if (l instanceof VarRefNode) {
+             assignVar(((VarRefNode)l).getVname(), v);
+        } else if (l instanceof DereferNode) {
+            assignDerefer((DereferNode)l, v);
+        } else {
+            throw new IllegalArgumentException(l.getClass().getName());
+        }
+    }
+    
+    private void assignVar(String vname, ExprNode val) {
+        val.accept(this);
+        LvarDefinition var = fScope.getVar(vname);
+        if (var.isArg()) {
+            asm.gent("mov %%rax, %%%s", ARG_REGS.get(var.getIdx() - 1));
+        } else {
+            asm.gent("mov %%%s, %s(%%rbp)", axBySize(var.getType().getSize()), var.getIdx());
+        }
+    }
+    
+    private void assignDerefer(DereferNode l, ExprNode val) {
+        l.getVar().accept(this);
+        asm.gent("push %%rax");
+        val.accept(this);
+        asm.gent("pop %%rcx");
+        asm.gent("mov %%%s, (%%rcx)", axBySize(l.type().getSize()));
     }
     
     @Override
@@ -222,16 +250,11 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         if (n.getLvar().getType() instanceof ArrayType) {
             initArr(n.getLvar(), (ArrLiteralNode) n.getExpr());
         } else {
-            letVar(n.getLvar().getVname(), n.getExpr());            
+            assignVar(n.getLvar().getVname(), n.getExpr());            
         }
         return null;
     }
     
-    @Override
-    public Void visit(ArrLiteralNode n) {
-        return null; // Nothing to do
-    }
-
     private void initArr(VarDefNode v, ArrLiteralNode n) {
         ArrayType t = (ArrayType) v.getType();
         for (int i = 0; i < n.getElems().size(); i++) {
@@ -242,16 +265,11 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         }
     }
     
-    private void letVar(String vname, ExprNode val) {
-        val.accept(this);
-        LvarDefinition var = fScope.getVar(vname);
-        if (var.isArg()) {
-            asm.gent("mov %%rax, %%%s", ARG_REGS.get(var.getIdx() - 1));
-        } else {
-            asm.gent("mov %%%s, %s(%%rbp)", axBySize(var.getType().getSize()), var.getIdx());
-        }
+    @Override
+    public Void visit(ArrLiteralNode n) {
+        return null; // Nothing to do
     }
-    
+
     @Override
     public Void visit(VarRefNode n) {
         LvarDefinition var = fScope.getVar(n.getVname());

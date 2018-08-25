@@ -18,7 +18,7 @@ import jcc.ast.ReturnNode;
 import jcc.ast.StrLiteralNode;
 import jcc.ast.VarDefNode;
 import jcc.ast.VarInitNode;
-import jcc.ast.VarLetNode;
+import jcc.ast.AssignNode;
 import jcc.ast.VarRefNode;
 import jcc.ast.WhileNode;
 
@@ -33,7 +33,7 @@ public interface NodeVisitor<E, S> {
     E visit(AddressNode n);
     E visit(DereferNode n);
     E visit(ArrLiteralNode n);
-    E visit(VarLetNode n);
+    E visit(AssignNode n);
     E visit(VarInitNode n);
     // stmt
     S visit(BlockNode n);

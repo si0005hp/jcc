@@ -9,8 +9,8 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @AllArgsConstructor
-public class VarLetNode extends ExprNode {
-    private VarRefNode var;
+public class AssignNode extends ExprNode {
+    private ExprNode var;
     private ExprNode expr;
     
     @Override
