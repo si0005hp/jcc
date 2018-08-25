@@ -346,6 +346,23 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     
     @Override
     public Void visit(ForNode n) {
+        if (n.getInit() != null) {
+            n.getInit().accept(this);
+        }
+        String begin = makeJLbl();
+        String end = makeJLbl();
+        asm.gen("%s:", begin);
+        if (n.getCond() != null) {
+            n.getCond().accept(this);
+            asm.gent("test %%rax, %%rax");
+            asm.gent("je %s", end);
+        }
+        n.getBody().accept(this);
+        if (n.getStep() != null) {
+            n.getStep().accept(this);
+        }
+        asm.gent("jmp %s", begin);
+        asm.gen("%s:", end);
         return null;
     }
 
