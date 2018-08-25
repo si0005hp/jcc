@@ -120,23 +120,23 @@ expr returns [ExprNode n]
 	;
 
 assign returns [AssignNode n]
-	: var EQ v=expr      { $n = new AssignNode($var.n, $v.n); }
-	| derefer EQ v=expr  { $n = new AssignNode($derefer.n, $v.n); }
+	: var '=' v=expr      { $n = new AssignNode($var.n, $v.n); }
+	| derefer '=' v=expr  { $n = new AssignNode($derefer.n, $v.n); }
 	;
 
 varInit returns [VarInitNode n]
-	: type IDT EQ expr  { $n = new VarInitNode(new VarDefNode($type.t, $IDT.text), $expr.n); }
+	: type IDT '=' expr  { $n = new VarInitNode(new VarDefNode($type.t, $IDT.text), $expr.n); }
 	| arrInit           { $n = $arrInit.n; }
 	;
 
 arrInit returns [VarInitNode n]
-	: type IDT LBRACK INTLIT? RBRACK EQ LBRACE exprList? RBRACE  
+	: type IDT LBRACK INTLIT? RBRACK '=' LBRACE exprList? RBRACE  
 	  { 
 	  	ArrLiteralNode an = new ArrLiteralNode($type.t, $exprList.ctx == null ? new ArrayList<>() : $exprList.ns);
 	  	int size = $INTLIT == null ? an.getElems().size() : $INTLIT.int;
 	  	$n = new VarInitNode(new VarDefNode(ArrayType.of($type.t, size), $IDT.text), an); 
 	  }
-	| type IDT LBRACK INTLIT? RBRACK EQ STRLIT  
+	| type IDT LBRACK INTLIT? RBRACK '=' STRLIT  
 	  { 
 	  	ArrLiteralNode an = new ArrLiteralNode($type.t, ParseUtils.strToIntLiteralNodes(StrUtils.stringValue($STRLIT.text)));
 	  	int size = $INTLIT == null ? an.getElems().size() : $INTLIT.int;
@@ -197,10 +197,9 @@ RPAREN : ')' ;
 LBRACK : '[' ;
 RBRACK : ']' ;
 SEMICOLON : ';' ;
-EQ : '=' ;
 
-EQEQ : '==' ;
-NOTEQ : '!=' ;
+EQ : '==' ;
+NEQ : '!=' ;
 GT : '>' ;
 LT : '<' ;
 GTE : '>=' ;

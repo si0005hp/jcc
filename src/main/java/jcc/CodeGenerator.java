@@ -152,6 +152,8 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         
         String op = null;
         switch (n.getOpType()) {
+        case EQ: binOpCmp("sete", n); return null;
+        case NEQ: binOpCmp("setne", n); return null;
         case GT: binOpCmp("setg", n); return null;
         case LT: binOpCmp("setl", n); return null;
         case ADD: op = "add"; break;
