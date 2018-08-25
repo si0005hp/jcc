@@ -58,7 +58,7 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
             asm.gen(".data");
             constTbl.getStrLiterals().forEach((s, lbl) -> {
                 asm.gen("%s:", lbl);
-                asm.gent(".string \"%s\"", s);
+                asm.gent(".string %s", StrUtils.dumpString(s));
             });
         }
     }
