@@ -80,6 +80,16 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         }
     }
     
+    private String cxBySize(int size) {
+        switch (size) {
+        case 1: return "cl";
+        case 4: return "ecx";
+        case 8: return "rcx";
+        default:
+            throw new IllegalArgumentException(String.valueOf(size));
+        }
+    }
+    
     FunctionScope fScope;
     @Override
     public Void visit(FuncDefNode n) {
@@ -295,6 +305,10 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
 
     @Override
     public Void visit(FuncCallNode n) {
+        // Save current regs
+        for (int i = 1; i < n.getArgs().size(); i++) {
+            asm.gent("push %%%s", ARG_REGS.get(i));
+        }
         // process args
         for (int i = 0; i < n.getArgs().size(); i++) {
             n.getArgs().get(i).accept(this);
@@ -306,6 +320,10 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         // call func
         asm.gent("mov $0, %%eax");
         asm.gent("call %s", n.getFname());
+        // Revert saved regs
+        for (int i = n.getArgs().size() - 1; i > 0; i--) {
+            asm.gent("pop %%%s", ARG_REGS.get(i));
+        }
         return null;
     }
 
@@ -339,7 +357,9 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     @Override
     public Void visit(DereferNode n) {
         n.getVar().accept(this);
-        asm.gent("mov (%%rax), %%rax");
+        asm.gent("mov $0, %%ecx");
+        asm.gent("mov (%%rax), %%%s", cxBySize(n.type().getSize()));
+        asm.gent("mov %%rcx, %%rax");
         return null;
     }
 
