@@ -8,17 +8,19 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
 @AllArgsConstructor
 @RequiredArgsConstructor
 public class FuncDefNode extends StmtNode {
-    @Value
+    @Data
+    @AllArgsConstructor
+    @RequiredArgsConstructor
     public static class ParamDef {
-        private Type type;
-        private String pname;
+        private final Type type;
+        private final String pname;
+        private int idx;
     }
 
     private final Type retvalType;

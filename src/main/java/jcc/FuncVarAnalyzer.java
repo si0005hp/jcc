@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import jcc.ast.FuncDefNode;
+import jcc.ast.FuncDefNode.ParamDef;
 import jcc.ast.VarDefNode;
 import jcc.ast.VarInitNode;
 
@@ -16,6 +17,10 @@ public class FuncVarAnalyzer extends AbstractVisitor {
         super.visit(n);
         
         int idx = 0;
+        for (ParamDef p : n.getParams()) {
+            idx += align8x(p.getType().getSize());
+            p.setIdx(idx);
+        }
         for (VarDefNode v : vars) {
             idx += align8x(v.getType().getSize());
             v.setIdx(idx);

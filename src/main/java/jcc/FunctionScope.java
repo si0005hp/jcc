@@ -40,7 +40,7 @@ public class FunctionScope {
 
     private void addFuncArgs(FuncDefNode n) {
         n.getParams().stream()
-            .map(p -> new LvarDefinition(p.getType(), p.getPname(), true, ++argIdx))
+            .map(p -> new LvarDefinition(p.getType(), p.getPname(), true, p.getIdx() * -1))
             .forEach(this::addVarDef);
     }
     

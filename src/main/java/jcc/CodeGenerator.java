@@ -100,6 +100,9 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         asm.gen("%s:", n.getFname());
         asm.gent("push %%rbp");
         asm.gent("mov %%rsp, %%rbp");
+        for (int i = 0; i < n.getParams().size(); i++) {
+            asm.gent("push %%%s", ARG_REGS.get(i));
+        }
         int iSum = n.getVars().stream().mapToInt(VarDefNode::getIdx).max().orElse(0);
         if (iSum > 0) {
             asm.gent("sub $%s, %%rsp", iSum);    
@@ -243,11 +246,7 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     private void assignVar(String vname, ExprNode val) {
         val.accept(this);
         LvarDefinition var = fScope.getVar(vname);
-        if (var.isArg()) {
-            asm.gent("mov %%rax, %%%s", ARG_REGS.get(var.getIdx() - 1));
-        } else {
-            asm.gent("mov %%%s, %s(%%rbp)", axBySize(var.getType().getSize()), var.getIdx());
-        }
+        asm.gent("mov %%%s, %s(%%rbp)", axBySize(var.getType().getSize()), var.getIdx());
     }
     
     private void assignDerefer(DereferNode l, ExprNode val) {
@@ -290,15 +289,11 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         if (var.getType() instanceof ArrayType) {
             refAddres(var);
         } else {
-            if (var.isArg()) {
-                asm.gent("mov %%%s, %%rax", ARG_REGS.get(var.getIdx() - 1));
-            } else {
-                String ax = axBySize(var.getType().getSize());
-                if (ax.equals("al")) {
-                    asm.gent("mov $0, %%eax", var.getIdx(), ax);
-                }
-                asm.gent("mov %s(%%rbp), %%%s", var.getIdx(), ax);
+            String ax = axBySize(var.getType().getSize());
+            if (ax.equals("al")) {
+                asm.gent("mov $0, %%eax", var.getIdx(), ax);
             }
+            asm.gent("mov %s(%%rbp), %%%s", var.getIdx(), ax);
         }
         return null;
     }
@@ -347,11 +342,7 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
     }
     
     private void refAddres(LvarDefinition var) {
-        if (var.isArg()) {
-            asm.gent("lea %%%s, %%rax", ARG_REGS.get(var.getIdx() - 1));
-        } else {
-            asm.gent("lea %s(%%rbp), %%rax", var.getIdx());
-        }
+        asm.gent("lea %s(%%rbp), %%rax", var.getIdx());
     }
 
     @Override
