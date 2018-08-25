@@ -156,6 +156,8 @@ public class CodeGenerator implements NodeVisitor<Void, Void> {
         case NEQ: binOpCmp("setne", n); return null;
         case GT: binOpCmp("setg", n); return null;
         case LT: binOpCmp("setl", n); return null;
+        case GTE: binOpCmp("setge", n); return null;
+        case LTE: binOpCmp("setle", n); return null;
         case ADD: op = "add"; break;
         case SUB: op = "sub"; break;
         case MUL: op = "imul"; break;
