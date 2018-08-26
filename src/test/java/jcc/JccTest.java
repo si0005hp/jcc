@@ -21,6 +21,7 @@ import java.util.stream.Stream;
 import org.antlr.v4.runtime.CharStreams;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -28,11 +29,11 @@ import lombok.Value;
 
 public class JccTest {
 
-    private static final List<TestF> tests = new ArrayList<>();
     private static final String PTN = ".*";
-    
     private static final String TEST_LIST = "test.list";
     private static final String TEST_OUT_DIR = ".test";
+    
+    private static List<TestF> tests;
     
     @Value
     static class TestF {
@@ -48,14 +49,29 @@ public class JccTest {
         FileUtils.forceMkdir(outputDir);
         
         File testListFile = new File(JccTest.class.getResource(TEST_LIST).toURI());
-        readTestList(testListFile, tests);
+        tests = readTestList(testListFile);
         FileUtils.copyFileToDirectory(testListFile, outputDir);
+    }
+    
+    @AfterClass
+    public static void tearDown() {
+        File outputDir = new File(getOutputDirPath());
+        tests.stream()
+            .filter(t -> "d".equals(t.getType()))
+            .map(t -> getFNameWithGivenExt(t.getName(), "output"))
+            .forEach(s -> {
+                try {
+                    File f = new File(JccTest.class.getResource(s).toURI());
+                    FileUtils.copyFileToDirectory(f, outputDir);
+                } catch (Exception e) {
+                    throw new RuntimeException("Failed to tearDown.", e);
+                }
+            });
     }
     
     @Test
     public void run() {
-        List<TestF> targetTests = tests.stream().filter(testFilter(PTN)).collect(Collectors.toList());
-        for (TestF f : targetTests) {
+        for (TestF f : tests) {
             try {
                 if ("@Fail".equals(f.getAnswer())) {
                     expectedToFail(() -> runF(f.getName())); 
@@ -66,25 +82,28 @@ public class JccTest {
                 throw new RuntimeException("Failed in test: " + f.getName(), e);
             }
         }
-        System.out.println(String.format("Processed %s files with pattern '%s'.", targetTests.size(), PTN));
+        System.out.println(String.format("Processed %s files with pattern '%s'.", tests.size(), PTN));
     }
     
+    @SuppressWarnings("unused")
     private Predicate<TestF> testFilter(String pattern) {
         return t -> Pattern.matches(pattern, t.getName());
     }
     
-    private static void readTestList(File f, List<TestF> testList) {
+    private static List<TestF> readTestList(File f) {
+        List<TestF> result = new ArrayList<>();
         try (InputStream is = new FileInputStream(f);
                 InputStreamReader isr = new InputStreamReader(is);
                 BufferedReader br = new BufferedReader(isr);) {
             String line = null;
             while (StringUtils.isNotEmpty((line = br.readLine()))) {
                 String[] s = line.split("\t");
-                testList.add(new TestF(s[0], s[1], s[2]));
+                result.add(new TestF(s[0], s[1], s[2]));
             }
         } catch (IOException e) {
             throw new RuntimeException("Failed to load file: " + f.getName());
         }
+        return result;
     }
 
     private static String getOutputDirPath() {
@@ -92,7 +111,7 @@ public class JccTest {
     }
     
     private static String getOutputFilePath(String fname) {
-        return getOutputDirPath() + File.separator + getSFileName(fname); 
+        return getOutputDirPath() + File.separator + getFNameWithGivenExt(fname, "s"); 
     }
     
     private void runF(String cFileName) {
@@ -104,11 +123,11 @@ public class JccTest {
         }
     }
     
-    private static String getSFileName(String cFileName) {
+    private static String getFNameWithGivenExt(String cFileName, String ext) {
         if (!cFileName.endsWith(".c")) {
             throw new RuntimeException("Illegal cFileName: " + cFileName);
         }
-        return cFileName.replaceFirst("\\.c", ".s");
+        return cFileName.replaceFirst("\\.c", String.format(".%s", ext));
     }
 
     private void expectedToFail(Runnable r) {
@@ -121,6 +140,7 @@ public class JccTest {
         throw new RuntimeException("Expected to be failed but ended normaly.");
     }
     
+    @SuppressWarnings("unused")
     private String runAndGetSysout(Runnable r) {
         PrintStream orgSysout = System.out;
 
@@ -139,6 +159,7 @@ public class JccTest {
         return result;
     }
     
+    @SuppressWarnings("unused")
     private String perNewLine(Object... data) {
         if (data.length == 0) {
             return "";

@@ -26,15 +26,26 @@ FAILS_LIST="fails.list"
   		fi
 
 		if [[ "$IS_COMPILE_ONLY" == "f" ]]; then
-			if [[ "$type" == "e" ]]; then
-				./$elfName; res="$?"
-			else 
-				res=$(./$elfName)
+			if [[ "$type" == "d" ]]; then
+				# Test by output using 'd'iff
+				./$elfName > "${elfName}.result"
+				diff "${elfName}.result" "$answer" > /dev/null; res="$?"
+				if [[ "$res" != "0" ]]; then
+					echo "Test failed: ${asmName}	Expected -> ${answer} Actual result -> ${elfName}.result"
+					echo "${asmName}	d" >> "$FAILS_LIST"
+				fi
+			else
+				# Test by 'e'xit value or 's'ysout
+				if [[ "$type" == "e" ]]; then
+					./$elfName; res="$?"
+				else 
+					res=$(./$elfName)
+				fi
+				if [ "$res" != "$answer" ]; then
+					echo "Test failed: ${asmName}	${answer} expected but got ${res}"
+					echo "${asmName}	t" >> "$FAILS_LIST"
+	  			fi
 			fi
-			if [ "$res" != "$answer" ]; then
-				echo "Test failed: ${asmName}	${answer} expected but got ${res}"
-				echo "${asmName}	t" >> "$FAILS_LIST"
-  			fi
 		fi
 	done
 

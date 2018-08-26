@@ -14,6 +14,7 @@ func4.c	e	8
 func5.c	e	20
 func6.c	e	@Fail
 func7.c	e	40
+func8.c	s	720
 char1.c	e	97
 char2.c	e	98
 str1.c	s	a
@@ -38,3 +39,4 @@ cmp2.c	e	36
 cmp3.c	e	78
 for1.c	e	5
 for2.c	e	10
+nqueen.c	d	nqueen.output
